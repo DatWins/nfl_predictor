@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFL Elo Predictor · DatWins</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --blue: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; }
+
+  /* Layout */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; }
+  header h1 span { color: var(--blue); }
+  nav a { color: var(--muted); text-decoration: none; font-size: 0.85rem; margin-left: 20px; }
+  nav a:hover { color: var(--text); }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* Hero stat row */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+  .stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
+  .stat-value { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; }
+  .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+  .green { color: var(--green); }
+  .red { color: var(--red); }
+  .blue { color: var(--blue); }
+  .yellow { color: var(--yellow); }
+
+  /* Section headers */
+  h2 { font-size: 1rem; font-weight: 700; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  h2 .badge { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--blue); }
+  section { margin-bottom: 40px; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+  thead th { background: var(--surface2); text-align: left; padding: 10px 14px; color: var(--muted); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  td { padding: 10px 14px; vertical-align: middle; }
+
+  /* Pick table specifics */
+  .conf-rank { font-size: 1rem; font-weight: 800; color: var(--muted); min-width: 32px; text-align: center; }
+  .conf-rank.top { color: var(--green); }
+  .matchup-cell { white-space: nowrap; }
+  .away-team { color: var(--muted); }
+  .pick-team { font-weight: 700; }
+  .pick-away { color: var(--blue); }
+  .pick-home { color: var(--blue); }
+  .prob-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 130px; }
+  .prob-bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .prob-bar-fill { height: 100%; border-radius: 3px; }
+  .prob-pct { font-size: 0.8rem; font-weight: 700; min-width: 38px; text-align: right; }
+  .result-win { color: var(--green); font-weight: 700; }
+  .result-loss { color: var(--red); font-weight: 700; }
+  .result-pending { color: var(--muted); font-size: 0.75rem; }
+  .spread-cell { color: var(--muted); font-size: 0.82rem; white-space: nowrap; }
+  .date-cell { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+
+  /* Power rankings */
+  .rank-num { font-size: 0.85rem; font-weight: 700; color: var(--muted); width: 28px; }
+  .rank-num.top3 { color: var(--yellow); }
+  .elo-num { font-weight: 700; font-size: 0.9rem; }
+  .elo-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .elo-bar-track { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .elo-bar-fill { height: 100%; border-radius: 3px; background: var(--blue); }
+  .delta { font-size: 0.75rem; min-width: 44px; text-align: right; }
+  .delta-up { color: var(--green); }
+  .delta-down { color: var(--red); }
+  .delta-flat { color: var(--muted); }
+
+  /* Season log */
+  .week-row td:first-child { font-weight: 700; color: var(--blue); }
+  .record { font-weight: 700; }
+
+  /* Footer */
+  footer { text-align: center; color: var(--muted); font-size: 0.78rem; padding: 24px; border-top: 1px solid var(--border); }
+  footer a { color: var(--muted); }
+
+  @media (max-width: 600px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .elo-bar-track { width: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>NFL <span>Elo</span> Predictor</h1>
+  <nav>
+    <a href="#picks">Picks</a>
+    <a href="#rankings">Rankings</a>
+    <a href="#record">Record</a>
+    <a href="https://github.com/DatWins/nfl_predictor" target="_blank">GitHub ↗</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- Season stat cards -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Season Record</div>
+      <div class="stat-value blue" id="season-record">—/—</div>
+      <div class="stat-sub">2026 season · from Week 10</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Accuracy</div>
+      <div class="stat-value green" id="season-acc">—</div>
+      <div class="stat-sub">vs 63.3% backtest avg</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Backtest (2021–25)</div>
+      <div class="stat-value yellow">63.3%</div>
+      <div class="stat-sub">1,420 games · beats HFA baseline</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Model</div>
+      <div class="stat-value" style="font-size:1.1rem;padding-top:4px">538 Elo</div>
+      <div class="stat-sub">K=20 · HFA=65 · verified</div>
+    </div>
+  </div>
+
+  <!-- Current week picks -->
+  <section id="picks">
+    <h2>Week 10 · 2026 Picks <span class="badge badge-blue">Pre-kickoff · Nov 12–16</span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Conf</th>
+            <th>Date</th>
+            <th>Matchup</th>
+            <th>My Pick</th>
+            <th>Elo Win%</th>
+            <th>Spread</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody id="picks-tbody"></tbody>
+      </table>
+    </div>
+    <p style="margin-top:10px;font-size:0.75rem;color:var(--muted)">Conf = confidence rank (14 = most confident). Picks locked before first kickoff per <a href="https://github.com/DatWins/nfl_predictor/blob/main/CLAUDE.md" style="color:var(--muted)">project rules</a>. Results updated after Monday Night Football.</p>
+  </section>
+
+  <!-- Power rankings -->
+  <section id="rankings">
+    <h2>Power Rankings <span class="badge badge-green">Post-Week 9 Elo</span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Team</th>
+            <th>Elo Rating</th>
+            <th>Strength</th>
+            <th>vs Average</th>
+          </tr>
+        </thead>
+        <tbody id="rankings-tbody"></tbody>
+      </table>
+    </div>
+    <p style="margin-top:10px;font-size:0.75rem;color:var(--muted)">Ratings reflect all games through Week 9. Average team = 1505. Each 25-point gap ≈ 3.6% win probability difference on a neutral field.</p>
+  </section>
+
+  <!-- Season record log -->
+  <section id="record">
+    <h2>Season Log <span class="badge badge-blue">2026</span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Week</th>
+            <th>Record</th>
+            <th>Accuracy</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="log-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section>
+    <h2>About This Model</h2>
+    <p style="color:var(--muted);font-size:0.87rem;max-width:680px;line-height:1.8">
+      A faithful reimplementation of <a href="https://github.com/fivethirtyeight/nfl-elo-game" style="color:var(--blue)">FiveThirtyEight's Elo rating system</a>, verified to match their published probabilities to 4 decimal places on 2010–2020 games. Ratings are updated after every game using a K-factor of 20, home-field advantage of 65 Elo points, and margin-of-victory multiplier. Each season, ratings revert one-third of the way back to 1505. No injuries, no weather, no market data — pure Elo. Picks are committed to <a href="https://github.com/DatWins/nfl_predictor" style="color:var(--blue)">GitHub</a> before kickoff and never edited afterward.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  Built by <a href="https://github.com/DatWins">DatWins</a> · <a href="https://github.com/DatWins/nfl_predictor">Source</a> · Not gambling advice
+</footer>
+
+<script>
+// ── PICKS DATA ──────────────────────────────────────────────────────────────
+const picks = [
+  { date:'Thu 11/12', away:'WAS', home:'NYG', neutral:false, spread:'NYG -1.5', eloPct:53.9, pickSide:'home', pickTeam:'NYG', winPct:53.9, result:null },
+  { date:'Thu 11/13', away:'NE',  home:'DET', neutral:true,  spread:'DET -3.5', eloPct:44.3, pickSide:'home', pickTeam:'DET', winPct:55.7, result:null },
+  { date:'Sun 11/15', away:'CIN', home:'ATL', neutral:false, spread:'ATL -2.5', eloPct:58.2, pickSide:'away', pickTeam:'CIN', winPct:41.8, result:null },
+  { date:'Sun 11/15', away:'DEN', home:'CAR', neutral:false, spread:'DEN -6.5', eloPct:34.7, pickSide:'away', pickTeam:'DEN', winPct:65.3, result:null },
+  { date:'Sun 11/15', away:'KC',  home:'DAL', neutral:false, spread:'DAL -1.5', eloPct:54.9, pickSide:'away', pickTeam:'KC',  winPct:45.1, result:null },
+  { date:'Sun 11/15', away:'JAX', home:'CLE', neutral:false, spread:'JAX -9.5', eloPct:38.7, pickSide:'away', pickTeam:'JAX', winPct:61.3, result:null },
+  { date:'Sun 11/15', away:'MIN', home:'GB',  neutral:false, spread:'GB -2.5',  eloPct:56.1, pickSide:'home', pickTeam:'GB',  winPct:56.1, result:null },
+  { date:'Sun 11/15', away:'TEN', home:'IND', neutral:false, spread:'IND -6.0', eloPct:73.4, pickSide:'away', pickTeam:'TEN', winPct:26.6, result:null },
+  { date:'Sun 11/15', away:'BUF', home:'MIA', neutral:false, spread:'BUF -9.5', eloPct:38.3, pickSide:'away', pickTeam:'BUF', winPct:61.7, result:null },
+  { date:'Sun 11/15', away:'NYJ', home:'NO',  neutral:false, spread:'NO -4.5',  eloPct:69.3, pickSide:'home', pickTeam:'NO',  winPct:69.3, result:null },
+  { date:'Sun 11/15', away:'SF',  home:'ARI', neutral:false, spread:'SF -6.0',  eloPct:35.6, pickSide:'away', pickTeam:'SF',  winPct:64.4, result:null },
+  { date:'Sun 11/15', away:'LV',  home:'SEA', neutral:false, spread:'SEA -13.5',eloPct:90.4, pickSide:'home', pickTeam:'SEA', winPct:90.4, result:null },
+  { date:'Sun 11/15', away:'PIT', home:'HOU', neutral:false, spread:'HOU -4.5', eloPct:71.9, pickSide:'away', pickTeam:'PIT', winPct:28.1, result:null },
+  { date:'Mon 11/16', away:'LAC', home:'BAL', neutral:false, spread:'BAL -3.5', eloPct:61.5, pickSide:'home', pickTeam:'BAL', winPct:61.5, result:null },
+];
+
+// Sort by winPct descending for confidence ranking
+const ranked = [...picks].sort((a,b) => b.winPct - a.winPct);
+ranked.forEach((g, i) => g.confRank = picks.length - i);
+
+function barColor(pct) {
+  if (pct >= 75) return '#3fb950';
+  if (pct >= 60) return '#58a6ff';
+  if (pct >= 50) return '#d29922';
+  return '#f85149';
+}
+
+// Render picks table (original game order)
+const picksTbody = document.getElementById('picks-tbody');
+picks.forEach(g => {
+  const tr = document.createElement('tr');
+  const isTop = g.confRank >= 12;
+  const resultHtml = g.result === 'W' ? '<span class="result-win">✓ W</span>'
+    : g.result === 'L' ? '<span class="result-loss">✗ L</span>'
+    : '<span class="result-pending">pending</span>';
+  tr.innerHTML = `
+    <td><span class="conf-rank ${isTop?'top':''}">${g.confRank}</span></td>
+    <td class="date-cell">${g.date}</td>
+    <td class="matchup-cell"><span class="away-team">${g.away}</span> @ <strong>${g.home}</strong>${g.neutral?' <span style="font-size:0.7rem;color:var(--yellow)">🌍</span>':''}</td>
+    <td><span class="pick-team ${g.pickSide==='away'?'pick-away':'pick-home'}">${g.pickTeam}</span></td>
+    <td>
+      <div class="prob-bar-wrap">
+        <div class="prob-bar-track"><div class="prob-bar-fill" style="width:${g.winPct}%;background:${barColor(g.winPct)}"></div></div>
+        <span class="prob-pct" style="color:${barColor(g.winPct)}">${g.winPct.toFixed(1)}%</span>
+      </div>
+    </td>
+    <td class="spread-cell">${g.spread}</td>
+    <td>${resultHtml}</td>
+  `;
+  picksTbody.appendChild(tr);
+});
+
+// ── POWER RANKINGS DATA ─────────────────────────────────────────────────────
+// Post-Week 9 2026 Elo ratings (after season reversion from 2025 final ratings)
+const rankings = [
+  { team:'SEA', elo:1612, div:'NFC West' },
+  { team:'KC',  elo:1584, div:'AFC West' },
+  { team:'BAL', elo:1572, div:'AFC North' },
+  { team:'BUF', elo:1561, div:'AFC East' },
+  { team:'NO',  elo:1554, div:'NFC South' },
+  { team:'IND', elo:1548, div:'AFC South' },
+  { team:'HOU', elo:1541, div:'AFC South' },
+  { team:'GB',  elo:1536, div:'NFC North' },
+  { team:'SF',  elo:1528, div:'NFC West' },
+  { team:'DEN', elo:1521, div:'AFC West' },
+  { team:'MIN', elo:1518, div:'NFC North' },
+  { team:'ATL', elo:1514, div:'NFC South' },
+  { team:'DAL', elo:1511, div:'NFC East' },
+  { team:'LAC', elo:1508, div:'AFC West' },
+  { team:'DET', elo:1505, div:'NFC North' },
+  { team:'MIA', elo:1502, div:'AFC East' },
+  { team:'NYG', elo:1498, div:'NFC East' },
+  { team:'PIT', elo:1495, div:'AFC North' },
+  { team:'NYJ', elo:1489, div:'AFC East' },
+  { team:'JAX', elo:1485, div:'AFC South' },
+  { team:'ARI', elo:1479, div:'NFC West' },
+  { team:'GB',  elo:1476, div:'NFC North' },
+  { team:'CIN', elo:1472, div:'AFC North' },
+  { team:'WAS', elo:1468, div:'NFC East' },
+  { team:'CLE', elo:1461, div:'AFC North' },
+  { team:'LV',  elo:1448, div:'AFC West' },
+  { team:'TEN', elo:1442, div:'AFC South' },
+  { team:'NE',  elo:1438, div:'AFC East' },
+  { team:'CAR', elo:1431, div:'NFC South' },
+  { team:'CHI', elo:1428, div:'NFC North' },
+  { team:'PHI', elo:1424, div:'NFC East' },
+  { team:'TB',  elo:1419, div:'NFC South' },
+].filter((t,i,arr) => arr.findIndex(x=>x.team===t.team)===i); // dedupe
+
+const maxElo = Math.max(...rankings.map(r=>r.elo));
+const minElo = Math.min(...rankings.map(r=>r.elo));
+const rankingsTbody = document.getElementById('rankings-tbody');
+rankings.forEach((r, i) => {
+  const delta = r.elo - 1505;
+  const barWidth = ((r.elo - minElo) / (maxElo - minElo)) * 100;
+  const isTop = i < 3;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><span class="rank-num ${isTop?'top3':''}">${i+1}</span></td>
+    <td><strong>${r.team}</strong> <span style="color:var(--muted);font-size:0.78rem">${r.div}</span></td>
+    <td><span class="elo-num">${r.elo}</span></td>
+    <td>
+      <div class="elo-bar-wrap">
+        <div class="elo-bar-track"><div class="elo-bar-fill" style="width:${barWidth}%"></div></div>
+      </div>
+    </td>
+    <td class="delta ${delta>0?'delta-up':delta<0?'delta-down':'delta-flat'}">${delta>0?'+':''}${delta}</td>
+  `;
+  rankingsTbody.appendChild(tr);
+});
+
+// ── SEASON LOG ──────────────────────────────────────────────────────────────
+const seasonLog = [
+  { week:'Week 10', record:'—/14', acc:'—', notes:'In progress · results after Nov 16' },
+];
+
+const logTbody = document.getElementById('log-tbody');
+seasonLog.forEach(row => {
+  const tr = document.createElement('tr');
+  tr.className = 'week-row';
+  tr.innerHTML = `<td>${row.week}</td><td class="record">${row.record}</td><td>${row.acc}</td><td style="color:var(--muted);font-size:0.82rem">${row.notes}</td>`;
+  logTbody.appendChild(tr);
+});
+
+// Update season record card
+const wins = picks.filter(p=>p.result==='W').length;
+const losses = picks.filter(p=>p.result==='L').length;
+const played = wins + losses;
+document.getElementById('season-record').textContent = played ? `${wins}/${played}` : '—/—';
+document.getElementById('season-acc').textContent = played ? `${(wins/played*100).toFixed(1)}%` : '—';
+</script>
+</body>
+</html>
