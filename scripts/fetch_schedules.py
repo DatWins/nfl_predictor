@@ -60,13 +60,27 @@ def download(first, last):
     for season in range(first, last + 1):
         print(f'  Fetching {season}...', end=' ', flush=True)
         df = nfl.load_schedules(seasons=[season])
-        # Keep only completed + upcoming regular-season and playoff games
-        df = df[df['season'] == season]
+        # nflreadpy returns a Polars dataframe — use .filter() not boolean indexing
+        if hasattr(df, 'filter'):
+            df = df.filter(df['season'] == season)
+            n = len(df)
+        else:
+            # fallback if pandas
+            df = df[df['season'] == season]
+            n = len(df)
         rows.append(df)
-        print(f'{len(df)} games')
+        print(f'{n} games')
+
+    # Convert to pandas for CSV writing (works from both polars and pandas input)
+    combined_rows = []
+    for df in rows:
+        if hasattr(df, 'to_pandas'):
+            combined_rows.append(df.to_pandas())
+        else:
+            combined_rows.append(df)
 
     import pandas as pd
-    combined = pd.concat(rows, ignore_index=True)
+    combined = pd.concat(combined_rows, ignore_index=True)
     raw_path = f'data/raw/schedules_{first}_{last}.csv'
     combined.to_csv(raw_path, index=False)
     return combined, raw_path
