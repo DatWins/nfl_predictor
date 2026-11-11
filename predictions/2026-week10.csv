@@ -1,0 +1,15 @@
+date,away,home,neutral,spread,elo_home_pct,my_pick,my_pct,pick_team
+Thu 11/12,WAS,NYG,0,NYG -1.5,53.9,home,53.9,NYG
+Thu 11/13,NE,DET,1,DET -3.5,44.3,home,44.3,DET
+Sun 11/15,CIN,ATL,0,ATL -2.5,58.2,away,41.8,CIN
+Sun 11/15,DEN,CAR,0,DEN -6.5,34.7,away,65.3,DEN
+Sun 11/15,KC,DAL,0,DAL -1.5,54.9,away,45.1,KC
+Sun 11/15,JAX,CLE,0,JAX -9.5,38.7,away,61.3,JAX
+Sun 11/15,MIN,GB,0,GB -2.5,56.1,home,56.1,GB
+Sun 11/15,TEN,IND,0,IND -6.0,73.4,away,26.6,TEN
+Sun 11/15,BUF,MIA,0,BUF -9.5,38.3,away,61.7,BUF
+Sun 11/15,NYJ,NO,0,NO -4.5,69.3,home,69.3,NO
+Sun 11/15,SF,ARI,0,SF -6.0,35.6,away,64.4,SF
+Sun 11/15,LV,SEA,0,SEA -13.5,90.4,home,90.4,SEA
+Sun 11/15,PIT,HOU,0,HOU -4.5,71.9,away,28.1,PIT
+Mon 11/16,LAC,BAL,0,BAL -3.5,61.5,home,61.5,BAL
