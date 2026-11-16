@@ -3,348 +3,948 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NFL Elo Predictor · DatWins</title>
+<title>NFL Predictor — Play Call &amp; Game Simulator</title>
 <style>
-  :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --surface2: #1c2128;
-    --border: #30363d;
-    --text: #e6edf3;
-    --muted: #7d8590;
-    --blue: #58a6ff;
-    --green: #3fb950;
-    --red: #f85149;
-    --yellow: #d29922;
-    --purple: #bc8cff;
-  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; }
 
-  /* Layout */
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
-  header h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; }
-  header h1 span { color: var(--blue); }
-  nav a { color: var(--muted); text-decoration: none; font-size: 0.85rem; margin-left: 20px; }
-  nav a:hover { color: var(--text); }
-  main { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
-
-  /* Hero stat row */
-  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
-  .stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
-  .stat-value { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; }
-  .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-  .green { color: var(--green); }
-  .red { color: var(--red); }
-  .blue { color: var(--blue); }
-  .yellow { color: var(--yellow); }
-
-  /* Section headers */
-  h2 { font-size: 1rem; font-weight: 700; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
-  h2 .badge { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
-  .badge-green { background: rgba(63,185,80,0.15); color: var(--green); }
-  .badge-blue { background: rgba(88,166,255,0.15); color: var(--blue); }
-  section { margin-bottom: 40px; }
-
-  /* Tables */
-  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
-  thead th { background: var(--surface2); text-align: left; padding: 10px 14px; color: var(--muted); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--surface2); }
-  td { padding: 10px 14px; vertical-align: middle; }
-
-  /* Pick table specifics */
-  .conf-rank { font-size: 1rem; font-weight: 800; color: var(--muted); min-width: 32px; text-align: center; }
-  .conf-rank.top { color: var(--green); }
-  .matchup-cell { white-space: nowrap; }
-  .away-team { color: var(--muted); }
-  .pick-team { font-weight: 700; }
-  .pick-away { color: var(--blue); }
-  .pick-home { color: var(--blue); }
-  .prob-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 130px; }
-  .prob-bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .prob-bar-fill { height: 100%; border-radius: 3px; }
-  .prob-pct { font-size: 0.8rem; font-weight: 700; min-width: 38px; text-align: right; }
-  .result-win { color: var(--green); font-weight: 700; }
-  .result-loss { color: var(--red); font-weight: 700; }
-  .result-pending { color: var(--muted); font-size: 0.75rem; }
-  .spread-cell { color: var(--muted); font-size: 0.82rem; white-space: nowrap; }
-  .date-cell { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
-
-  /* Power rankings */
-  .rank-num { font-size: 0.85rem; font-weight: 700; color: var(--muted); width: 28px; }
-  .rank-num.top3 { color: var(--yellow); }
-  .elo-num { font-weight: 700; font-size: 0.9rem; }
-  .elo-bar-wrap { display: flex; align-items: center; gap: 8px; }
-  .elo-bar-track { width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .elo-bar-fill { height: 100%; border-radius: 3px; background: var(--blue); }
-  .delta { font-size: 0.75rem; min-width: 44px; text-align: right; }
-  .delta-up { color: var(--green); }
-  .delta-down { color: var(--red); }
-  .delta-flat { color: var(--muted); }
-
-  /* Season log */
-  .week-row td:first-child { font-weight: 700; color: var(--blue); }
-  .record { font-weight: 700; }
-
-  /* Footer */
-  footer { text-align: center; color: var(--muted); font-size: 0.78rem; padding: 24px; border-top: 1px solid var(--border); }
-  footer a { color: var(--muted); }
-
-  @media (max-width: 600px) {
-    .stats-row { grid-template-columns: repeat(2, 1fr); }
-    .elo-bar-track { width: 60px; }
+  body {
+    background: #f9f7f4;
+    color: #1a1a1a;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px;
   }
+
+  h1 {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #c17b4e;
+    margin-bottom: 4px;
+    letter-spacing: 0.03em;
+  }
+  .subtitle {
+    text-align: center;
+    color: #6b6b6b;
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .tab {
+    padding: 8px 22px;
+    border-radius: 20px;
+    border: 1px solid #d0c8be;
+    background: #fff;
+    color: #6b6b6b;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab.active {
+    background: #c17b4e;
+    color: #fff;
+    border-color: #c17b4e;
+  }
+  .tab:not(.active):hover { border-color: #c17b4e; color: #c17b4e; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: #ffffff;
+    border: 1px solid #e0d9d0;
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 580px;
+    margin: 0 auto 20px auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+  .card h2 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9a8f85;
+    margin-bottom: 16px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .field-row.full  { grid-template-columns: 1fr; }
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    color: #6b6b6b;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  select, input[type=range] {
+    width: 100%;
+    background: #f9f7f4;
+    border: 1px solid #d0c8be;
+    border-radius: 6px;
+    color: #1a1a1a;
+    padding: 8px 10px;
+    font-size: 0.95rem;
+    appearance: none;
+    cursor: pointer;
+  }
+  select:focus { outline: none; border-color: #c17b4e; }
+
+  .range-wrap { display: flex; align-items: center; gap: 10px; }
+  input[type=range] {
+    padding: 4px 0;
+    accent-color: #c17b4e;
+    border: none;
+  }
+  .range-val {
+    min-width: 48px;
+    text-align: right;
+    font-size: 0.95rem;
+    color: #c17b4e;
+    font-weight: 600;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: #c17b4e;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.15s;
+    margin-top: 4px;
+  }
+  .btn:hover { background: #a8653c; }
+  .btn:disabled { background: #e0d9d0; color: #9a8f85; cursor: default; }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 32px;
+    color: #6b6b6b;
+    font-size: 0.9rem;
+    display: none;
+  }
+  .spinner {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border: 2px solid #e0d9d0;
+    border-top-color: #c17b4e;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Play-call results */
+  .scenario-label {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #4a4a4a;
+    margin-bottom: 16px;
+  }
+  .verdict {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  .verdict.pass { background: rgba(193,123,78,0.12); color: #a8653c; border: 1px solid #c17b4e; }
+  .verdict.run  { background: rgba(74,138,97,0.12);  color: #3a7a55; border: 1px solid #4a8a61; }
+  .verdict.flip { background: rgba(180,140,60,0.12); color: #8a6a20; border: 1px solid #c9a84c; }
+
+  .bar-section { margin-bottom: 20px; }
+  .bar-section h3 {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #9a8f85;
+    margin-bottom: 10px;
+  }
+  .bar-row { margin-bottom: 10px; }
+  .bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #6b6b6b;
+    margin-bottom: 4px;
+  }
+  .bar-label span:last-child { color: #1a1a1a; font-weight: 600; }
+  .bar-track {
+    background: #ede8e2;
+    border-radius: 4px;
+    height: 10px;
+    overflow: hidden;
+    display: flex;
+  }
+  .bar-pass { background: #c17b4e; height: 100%; border-radius: 4px 0 0 4px; transition: width 0.5s ease; }
+  .bar-run  { background: #4a8a61; height: 100%; border-radius: 0 4px 4px 0; transition: width 0.5s ease; }
+  .bar-legend { display: flex; gap: 16px; font-size: 0.75rem; margin-top: 6px; }
+  .bar-legend span { display: flex; align-items: center; gap: 5px; color: #6b6b6b; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot.pass { background: #c17b4e; }
+  .dot.run  { background: #4a8a61; }
+
+  .factors { font-size: 0.82rem; color: #6b6b6b; }
+  .factor-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #ede8e2;
+  }
+  .factor-row:last-child { border-bottom: none; }
+  .factor-row span:last-child { color: #1a1a1a; }
+
+  /* Game sim results */
+  .win-prob-row {
+    display: flex;
+    align-items: stretch;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 52px;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .wp-home {
+    background: #c17b4e;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: width 0.6s ease;
+  }
+  .wp-away {
+    background: #4a8a61;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: width 0.6s ease;
+  }
+
+  .score-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .score-box {
+    background: #f9f7f4;
+    border: 1px solid #e0d9d0;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .score-box .team-tag {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #9a8f85;
+    margin-bottom: 4px;
+  }
+  .score-box .pts {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .score-box .pts.home { color: #c17b4e; }
+  .score-box .pts.away { color: #4a8a61; }
+  .score-box .range-line {
+    font-size: 0.75rem;
+    color: #9a8f85;
+  }
+
+  .sim-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .sim-table th {
+    text-align: left;
+    color: #9a8f85;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid #e0d9d0;
+  }
+  .sim-table th:last-child { text-align: right; }
+  .sim-table td {
+    padding: 6px 0;
+    border-bottom: 1px solid #f0ebe4;
+    color: #1a1a1a;
+  }
+  .sim-table td:last-child { text-align: right; color: #c17b4e; font-weight: 600; }
+  .sim-table tr:last-child td { border-bottom: none; }
+
+  .script-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 0.82rem;
+    border-bottom: 1px solid #f0ebe4;
+    color: #6b6b6b;
+  }
+  .script-row:last-child { border-bottom: none; }
+  .script-row span:last-child { color: #1a1a1a; font-weight: 600; }
+
+  .note {
+    font-size: 0.75rem;
+    color: #9a8f85;
+    text-align: center;
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  .sim-sims-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .sim-sims-row label { text-transform: none; font-size: 0.82rem; color: #6b6b6b; margin: 0; }
+  .sim-sims-row select { width: auto; flex: 0 0 auto; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>NFL <span>Elo</span> Predictor</h1>
-  <nav>
-    <a href="#picks">Picks</a>
-    <a href="#rankings">Rankings</a>
-    <a href="#record">Record</a>
-    <a href="https://github.com/DatWins/nfl_predictor" target="_blank">GitHub ↗</a>
-  </nav>
-</header>
+<h1>🏈 NFL Predictor</h1>
+<p class="subtitle">Historical data · 2024–2025 play-by-play</p>
 
-<main>
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('playcall', this)">Level 1 — Play Call</button>
+  <button class="tab"        onclick="switchTab('gamesim',  this)">Level 2 — Game Simulator</button>
+</div>
 
-  <!-- Season stat cards -->
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-label">Season Record</div>
-      <div class="stat-value blue" id="season-record">—/—</div>
-      <div class="stat-sub">2026 season · from Week 10</div>
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 1: PLAY CALL
+     ══════════════════════════════════════════════════════════ -->
+<div id="panel-playcall" class="panel active">
+
+  <div class="card">
+    <h2>Game Situation</h2>
+
+    <div class="field-row three">
+      <div>
+        <label>Offense</label>
+        <select id="team"></select>
+      </div>
+      <div>
+        <label>Opponent Defense</label>
+        <select id="opponent">
+          <option value="">None (no adjustment)</option>
+        </select>
+      </div>
+      <div>
+        <label>Location</label>
+        <select id="location">
+          <option value="home">🏠 Home</option>
+          <option value="away" selected>✈️ Away</option>
+          <option value="neutral">⚖️ Neutral</option>
+        </select>
+      </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Accuracy</div>
-      <div class="stat-value green" id="season-acc">—</div>
-      <div class="stat-sub">vs 63.3% backtest avg</div>
+
+    <div class="field-row three">
+      <div>
+        <label>Down</label>
+        <select id="down">
+          <option value="1">1st</option>
+          <option value="2">2nd</option>
+          <option value="3" selected>3rd</option>
+          <option value="4">4th</option>
+        </select>
+      </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Backtest (2021–25)</div>
-      <div class="stat-value yellow">63.3%</div>
-      <div class="stat-sub">1,420 games · beats HFA baseline</div>
+
+    <div class="field-row full">
+      <div>
+        <label>Yards to Go</label>
+        <div class="range-wrap">
+          <input type="range" id="ytg" min="1" max="25" value="5"
+                 oninput="document.getElementById('ytg-show').textContent=this.value+' yds'">
+          <span class="range-val" id="ytg-show">5 yds</span>
+        </div>
+      </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Model</div>
-      <div class="stat-value" style="font-size:1.1rem;padding-top:4px">538 Elo</div>
-      <div class="stat-sub">K=20 · HFA=65 · verified</div>
+
+    <div class="field-row full" style="margin-top:4px">
+      <div>
+        <label>Field Position (yards from opp. end zone)</label>
+        <div class="range-wrap">
+          <input type="range" id="yardline" min="1" max="99" value="50"
+                 oninput="ylShow(this.value)">
+          <span class="range-val" id="yl-show">Midfield</span>
+        </div>
+      </div>
     </div>
+
+    <div class="field-row three" style="margin-top:12px">
+      <div>
+        <label>Score Diff</label>
+        <div class="range-wrap">
+          <input type="range" id="score" min="-21" max="21" value="0"
+                 oninput="scoreDiffShow(this.value)">
+          <span class="range-val" id="score-show">Tied</span>
+        </div>
+      </div>
+      <div>
+        <label>Quarter</label>
+        <div class="range-wrap">
+          <input type="range" id="quarter" min="1" max="4" value="2"
+                 oninput="document.getElementById('qtr-show').textContent='Q'+this.value">
+          <span class="range-val" id="qtr-show">Q2</span>
+        </div>
+      </div>
+      <div>
+        <label>Time Left (half)</label>
+        <div class="range-wrap">
+          <input type="range" id="seconds" min="0" max="1800" step="30" value="900"
+                 oninput="timeLeftShow(this.value)">
+          <span class="range-val" id="secs-show">Mid-half</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" id="predict-btn" onclick="predict()">Predict Play Call</button>
   </div>
 
-  <!-- Current week picks -->
-  <section id="picks">
-    <h2>Week 10 · 2026 Picks <span class="badge badge-blue">Pre-kickoff · Nov 12–16</span></h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Conf</th>
-            <th>Date</th>
-            <th>Matchup</th>
-            <th>My Pick</th>
-            <th>Elo Win%</th>
-            <th>Spread</th>
-            <th>Result</th>
-          </tr>
-        </thead>
-        <tbody id="picks-tbody"></tbody>
-      </table>
+  <div class="loading" id="pc-loading"><span class="spinner"></span> Calculating…</div>
+
+  <div class="card" id="pc-results" style="display:none">
+    <h2>Prediction</h2>
+    <div class="scenario-label" id="scenario-label"></div>
+    <div class="verdict" id="verdict"></div>
+
+    <div class="bar-section">
+      <h3>Pass vs Run probability</h3>
+      <div id="bars"></div>
+      <div class="bar-legend">
+        <span><i class="dot pass"></i> Pass</span>
+        <span><i class="dot run"></i> Run</span>
+      </div>
     </div>
-    <p style="margin-top:10px;font-size:0.75rem;color:var(--muted)">Conf = confidence rank (14 = most confident). Picks locked before first kickoff per <a href="https://github.com/DatWins/nfl_predictor/blob/main/CLAUDE.md" style="color:var(--muted)">project rules</a>. Results updated after Monday Night Football.</p>
-  </section>
 
-  <!-- Power rankings -->
-  <section id="rankings">
-    <h2>Power Rankings <span class="badge badge-green">Post-Week 9 Elo</span></h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Team</th>
-            <th>Elo Rating</th>
-            <th>Strength</th>
-            <th>vs Average</th>
-          </tr>
-        </thead>
-        <tbody id="rankings-tbody"></tbody>
-      </table>
+    <div class="bar-section">
+      <h3>Key factors</h3>
+      <div class="factors" id="factors"></div>
     </div>
-    <p style="margin-top:10px;font-size:0.75rem;color:var(--muted)">Ratings reflect all games through Week 9. Average team = 1505. Each 25-point gap ≈ 3.6% win probability difference on a neutral field.</p>
-  </section>
 
-  <!-- Season record log -->
-  <section id="record">
-    <h2>Season Log <span class="badge badge-blue">2026</span></h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Week</th>
-            <th>Record</th>
-            <th>Accuracy</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody id="log-tbody"></tbody>
-      </table>
+    <p class="note">Based on 2024–2025 play-by-play data. Opponent defense adjusts for pass EPA allowed, run EPA allowed, and pressure rate.</p>
+  </div>
+
+</div><!-- /panel-playcall -->
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 2: GAME SIMULATOR
+     ══════════════════════════════════════════════════════════ -->
+<div id="panel-gamesim" class="panel">
+
+  <div class="card">
+    <h2>Matchup</h2>
+
+    <div class="field-row">
+      <div>
+        <label>🏠 Home Team</label>
+        <select id="sim-home"></select>
+      </div>
+      <div>
+        <label>✈️ Away Team</label>
+        <select id="sim-away"></select>
+      </div>
     </div>
-  </section>
 
-  <!-- About -->
-  <section>
-    <h2>About This Model</h2>
-    <p style="color:var(--muted);font-size:0.87rem;max-width:680px;line-height:1.8">
-      A faithful reimplementation of <a href="https://github.com/fivethirtyeight/nfl-elo-game" style="color:var(--blue)">FiveThirtyEight's Elo rating system</a>, verified to match their published probabilities to 4 decimal places on 2010–2020 games. Ratings are updated after every game using a K-factor of 20, home-field advantage of 65 Elo points, and margin-of-victory multiplier. Each season, ratings revert one-third of the way back to 1505. No injuries, no weather, no market data — pure Elo. Picks are committed to <a href="https://github.com/DatWins/nfl_predictor" style="color:var(--blue)">GitHub</a> before kickoff and never edited afterward.
-    </p>
-  </section>
+    <div class="sim-sims-row">
+      <label>Simulations (more = slower but more accurate)</label>
+      <select id="sim-n">
+        <option value="500">500 (fast)</option>
+        <option value="2000" selected>2,000</option>
+        <option value="5000">5,000 (accurate)</option>
+      </select>
+    </div>
 
-</main>
+    <button class="btn" id="sim-btn" onclick="runSimulator()">Run Game Simulator</button>
+  </div>
 
-<footer>
-  Built by <a href="https://github.com/DatWins">DatWins</a> · <a href="https://github.com/DatWins/nfl_predictor">Source</a> · Not gambling advice
-</footer>
+  <div class="loading" id="sim-loading"><span class="spinner"></span> Running simulations…</div>
+
+  <div id="sim-results" style="display:none">
+
+    <div class="card">
+      <h2>Win Probability</h2>
+      <div class="win-prob-row" id="wp-bar">
+        <div class="wp-home" id="wp-home-el" style="width:50%">
+          <span id="wp-home-team">HOME</span>
+          <span id="wp-home-pct">50%</span>
+        </div>
+        <div class="wp-away" id="wp-away-el" style="width:50%">
+          <span id="wp-away-pct">50%</span>
+          <span id="wp-away-team">AWAY</span>
+        </div>
+      </div>
+      <div class="score-grid">
+        <div class="score-box">
+          <div class="team-tag" id="score-home-label">HOME</div>
+          <div class="pts home" id="score-home-avg">—</div>
+          <div class="range-line" id="score-home-range"></div>
+        </div>
+        <div class="score-box">
+          <div class="team-tag" id="score-away-label">AWAY</div>
+          <div class="pts away" id="score-away-avg">—</div>
+          <div class="range-line" id="score-away-range"></div>
+        </div>
+      </div>
+      <div class="script-row">
+        <span>Projected total</span>
+        <span id="sim-total">—</span>
+      </div>
+      <div class="script-row">
+        <span>Projected margin</span>
+        <span id="sim-margin">—</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Game Script Probabilities</h2>
+      <div id="sim-script"></div>
+    </div>
+
+    <div class="card">
+      <h2>Most Common Final Scores</h2>
+      <table class="sim-table">
+        <thead><tr><th>Score</th><th>Winner</th><th style="text-align:right">Freq</th></tr></thead>
+        <tbody id="sim-scores"></tbody>
+      </table>
+      <p class="note" id="sim-note"></p>
+    </div>
+
+  </div><!-- /sim-results -->
+
+</div><!-- /panel-gamesim -->
 
 <script>
-// ── PICKS DATA ──────────────────────────────────────────────────────────────
-const picks = [
-  { date:'Thu 11/12', away:'WAS', home:'NYG', neutral:false, spread:'NYG -1.5', eloPct:53.9, pickSide:'home', pickTeam:'NYG', winPct:53.9, result:null },
-  { date:'Thu 11/13', away:'NE',  home:'DET', neutral:true,  spread:'DET -3.5', eloPct:44.3, pickSide:'home', pickTeam:'DET', winPct:55.7, result:null },
-  { date:'Sun 11/15', away:'CIN', home:'ATL', neutral:false, spread:'ATL -2.5', eloPct:58.2, pickSide:'away', pickTeam:'CIN', winPct:41.8, result:null },
-  { date:'Sun 11/15', away:'DEN', home:'CAR', neutral:false, spread:'DEN -6.5', eloPct:34.7, pickSide:'away', pickTeam:'DEN', winPct:65.3, result:null },
-  { date:'Sun 11/15', away:'KC',  home:'DAL', neutral:false, spread:'DAL -1.5', eloPct:54.9, pickSide:'away', pickTeam:'KC',  winPct:45.1, result:null },
-  { date:'Sun 11/15', away:'JAX', home:'CLE', neutral:false, spread:'JAX -9.5', eloPct:38.7, pickSide:'away', pickTeam:'JAX', winPct:61.3, result:null },
-  { date:'Sun 11/15', away:'MIN', home:'GB',  neutral:false, spread:'GB -2.5',  eloPct:56.1, pickSide:'home', pickTeam:'GB',  winPct:56.1, result:null },
-  { date:'Sun 11/15', away:'TEN', home:'IND', neutral:false, spread:'IND -6.0', eloPct:73.4, pickSide:'away', pickTeam:'TEN', winPct:26.6, result:null },
-  { date:'Sun 11/15', away:'BUF', home:'MIA', neutral:false, spread:'BUF -9.5', eloPct:38.3, pickSide:'away', pickTeam:'BUF', winPct:61.7, result:null },
-  { date:'Sun 11/15', away:'NYJ', home:'NO',  neutral:false, spread:'NO -4.5',  eloPct:69.3, pickSide:'home', pickTeam:'NO',  winPct:69.3, result:null },
-  { date:'Sun 11/15', away:'SF',  home:'ARI', neutral:false, spread:'SF -6.0',  eloPct:35.6, pickSide:'away', pickTeam:'SF',  winPct:64.4, result:null },
-  { date:'Sun 11/15', away:'LV',  home:'SEA', neutral:false, spread:'SEA -13.5',eloPct:90.4, pickSide:'home', pickTeam:'SEA', winPct:90.4, result:null },
-  { date:'Sun 11/15', away:'PIT', home:'HOU', neutral:false, spread:'HOU -4.5', eloPct:71.9, pickSide:'away', pickTeam:'PIT', winPct:28.1, result:null },
-  { date:'Mon 11/16', away:'LAC', home:'BAL', neutral:false, spread:'BAL -3.5', eloPct:61.5, pickSide:'home', pickTeam:'BAL', winPct:61.5, result:null },
-];
+// ════════════════════════════════════════════════════════════
+// SHARED DATA
+// ════════════════════════════════════════════════════════════
 
-// Sort by winPct descending for confidence ranking
-const ranked = [...picks].sort((a,b) => b.winPct - a.winPct);
-ranked.forEach((g, i) => g.confRank = picks.length - i);
-
-function barColor(pct) {
-  if (pct >= 75) return '#3fb950';
-  if (pct >= 60) return '#58a6ff';
-  if (pct >= 50) return '#d29922';
-  return '#f85149';
+function teamOptions(selected) {
+  const groups = [
+    ['AFC East',  ['BUF','MIA','NE','NYJ']],
+    ['AFC North', ['BAL','CIN','CLE','PIT']],
+    ['AFC South', ['HOU','IND','JAX','TEN']],
+    ['AFC West',  ['KC','LV','LAC','DEN']],
+    ['NFC East',  ['DAL','NYG','PHI','WAS']],
+    ['NFC North', ['CHI','DET','GB','MIN']],
+    ['NFC South', ['ATL','CAR','NO','TB']],
+    ['NFC West',  ['ARI','LAR','SF','SEA']],
+  ];
+  const names = {
+    BUF:'Bills',MIA:'Dolphins',NE:'Patriots',NYJ:'Jets',
+    BAL:'Ravens',CIN:'Bengals',CLE:'Browns',PIT:'Steelers',
+    HOU:'Texans',IND:'Colts',JAX:'Jaguars',TEN:'Titans',
+    KC:'Chiefs',LV:'Raiders',LAC:'Chargers',DEN:'Broncos',
+    DAL:'Cowboys',NYG:'Giants',PHI:'Eagles',WAS:'Commanders',
+    CHI:'Bears',DET:'Lions',GB:'Packers',MIN:'Vikings',
+    ATL:'Falcons',CAR:'Panthers',NO:'Saints',TB:'Buccaneers',
+    ARI:'Cardinals',LAR:'Rams',SF:'49ers',SEA:'Seahawks',
+  };
+  return groups.map(([div, teams]) =>
+    `<optgroup label="${div}">${teams.map(t =>
+      `<option value="${t}"${t===selected?' selected':''}>${t} — ${names[t]}</option>`
+    ).join('')}</optgroup>`
+  ).join('');
 }
 
-// Render picks table (original game order)
-const picksTbody = document.getElementById('picks-tbody');
-picks.forEach(g => {
-  const tr = document.createElement('tr');
-  const isTop = g.confRank >= 12;
-  const resultHtml = g.result === 'W' ? '<span class="result-win">✓ W</span>'
-    : g.result === 'L' ? '<span class="result-loss">✗ L</span>'
-    : '<span class="result-pending">pending</span>';
-  tr.innerHTML = `
-    <td><span class="conf-rank ${isTop?'top':''}">${g.confRank}</span></td>
-    <td class="date-cell">${g.date}</td>
-    <td class="matchup-cell"><span class="away-team">${g.away}</span> @ <strong>${g.home}</strong>${g.neutral?' <span style="font-size:0.7rem;color:var(--yellow)">🌍</span>':''}</td>
-    <td><span class="pick-team ${g.pickSide==='away'?'pick-away':'pick-home'}">${g.pickTeam}</span></td>
-    <td>
-      <div class="prob-bar-wrap">
-        <div class="prob-bar-track"><div class="prob-bar-fill" style="width:${g.winPct}%;background:${barColor(g.winPct)}"></div></div>
-        <span class="prob-pct" style="color:${barColor(g.winPct)}">${g.winPct.toFixed(1)}%</span>
-      </div>
-    </td>
-    <td class="spread-cell">${g.spread}</td>
-    <td>${resultHtml}</td>
-  `;
-  picksTbody.appendChild(tr);
-});
+document.getElementById('team').innerHTML = teamOptions('KC');
+document.getElementById('sim-home').innerHTML = teamOptions('BAL');
+document.getElementById('sim-away').innerHTML = teamOptions('LAC');
+document.getElementById('opponent').innerHTML =
+  '<option value="">None (no adjustment)</option>' + teamOptions('');
 
-// ── POWER RANKINGS DATA ─────────────────────────────────────────────────────
-// Post-Week 9 2026 Elo ratings (after season reversion from 2025 final ratings)
-const rankings = [
-  { team:'SEA', elo:1612, div:'NFC West' },
-  { team:'KC',  elo:1584, div:'AFC West' },
-  { team:'BAL', elo:1572, div:'AFC North' },
-  { team:'BUF', elo:1561, div:'AFC East' },
-  { team:'NO',  elo:1554, div:'NFC South' },
-  { team:'IND', elo:1548, div:'AFC South' },
-  { team:'HOU', elo:1541, div:'AFC South' },
-  { team:'GB',  elo:1536, div:'NFC North' },
-  { team:'SF',  elo:1528, div:'NFC West' },
-  { team:'DEN', elo:1521, div:'AFC West' },
-  { team:'MIN', elo:1518, div:'NFC North' },
-  { team:'ATL', elo:1514, div:'NFC South' },
-  { team:'DAL', elo:1511, div:'NFC East' },
-  { team:'LAC', elo:1508, div:'AFC West' },
-  { team:'DET', elo:1505, div:'NFC North' },
-  { team:'MIA', elo:1502, div:'AFC East' },
-  { team:'NYG', elo:1498, div:'NFC East' },
-  { team:'PIT', elo:1495, div:'AFC North' },
-  { team:'NYJ', elo:1489, div:'AFC East' },
-  { team:'JAX', elo:1485, div:'AFC South' },
-  { team:'ARI', elo:1479, div:'NFC West' },
-  { team:'GB',  elo:1476, div:'NFC North' },
-  { team:'CIN', elo:1472, div:'AFC North' },
-  { team:'WAS', elo:1468, div:'NFC East' },
-  { team:'CLE', elo:1461, div:'AFC North' },
-  { team:'LV',  elo:1448, div:'AFC West' },
-  { team:'TEN', elo:1442, div:'AFC South' },
-  { team:'NE',  elo:1438, div:'AFC East' },
-  { team:'CAR', elo:1431, div:'NFC South' },
-  { team:'CHI', elo:1428, div:'NFC North' },
-  { team:'PHI', elo:1424, div:'NFC East' },
-  { team:'TB',  elo:1419, div:'NFC South' },
-].filter((t,i,arr) => arr.findIndex(x=>x.team===t.team)===i); // dedupe
+// ── Defensive ratings
+const DEF_RATINGS = {
+  BUF:{pe:+0.04,re:-0.09,pr:.28}, MIA:{pe:+0.08,re:-0.04,pr:.25},
+  NE: {pe:+0.11,re:+0.02,pr:.22}, NYJ:{pe:-0.02,re:-0.07,pr:.30},
+  BAL:{pe:-0.05,re:-0.10,pr:.31}, CIN:{pe:+0.06,re:-0.03,pr:.26},
+  CLE:{pe:-0.01,re:-0.08,pr:.29}, PIT:{pe:-0.04,re:-0.06,pr:.33},
+  HOU:{pe:+0.03,re:-0.05,pr:.27}, IND:{pe:+0.07,re:+0.01,pr:.24},
+  JAX:{pe:+0.09,re:+0.03,pr:.23}, TEN:{pe:+0.10,re:+0.02,pr:.22},
+  KC: {pe:-0.03,re:-0.07,pr:.30}, LV: {pe:+0.12,re:+0.04,pr:.21},
+  LAC:{pe:+0.01,re:-0.04,pr:.27}, DEN:{pe:-0.06,re:-0.08,pr:.31},
+  DAL:{pe:+0.05,re:-0.02,pr:.26}, NYG:{pe:+0.09,re:+0.01,pr:.23},
+  PHI:{pe:-0.04,re:-0.09,pr:.32}, WAS:{pe:+0.06,re:-0.01,pr:.25},
+  CHI:{pe:+0.08,re:+0.00,pr:.24}, DET:{pe:+0.03,re:-0.03,pr:.27},
+  GB: {pe:+0.02,re:-0.05,pr:.28}, MIN:{pe:-0.07,re:-0.11,pr:.34},
+  ATL:{pe:+0.07,re:+0.01,pr:.24}, CAR:{pe:+0.13,re:+0.05,pr:.21},
+  NO: {pe:+0.05,re:-0.02,pr:.26}, TB: {pe:+0.00,re:-0.06,pr:.29},
+  ARI:{pe:+0.10,re:+0.02,pr:.22}, LAR:{pe:-0.02,re:-0.07,pr:.30},
+  SF: {pe:-0.08,re:-0.12,pr:.32}, SEA:{pe:-0.06,re:-0.09,pr:.33},
+};
+const LG_PASS_EPA=0.062, LG_RUN_EPA=-0.041, LG_PRESSURE=0.265;
 
-const maxElo = Math.max(...rankings.map(r=>r.elo));
-const minElo = Math.min(...rankings.map(r=>r.elo));
-const rankingsTbody = document.getElementById('rankings-tbody');
-rankings.forEach((r, i) => {
-  const delta = r.elo - 1505;
-  const barWidth = ((r.elo - minElo) / (maxElo - minElo)) * 100;
-  const isTop = i < 3;
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td><span class="rank-num ${isTop?'top3':''}">${i+1}</span></td>
-    <td><strong>${r.team}</strong> <span style="color:var(--muted);font-size:0.78rem">${r.div}</span></td>
-    <td><span class="elo-num">${r.elo}</span></td>
-    <td>
-      <div class="elo-bar-wrap">
-        <div class="elo-bar-track"><div class="elo-bar-fill" style="width:${barWidth}%"></div></div>
-      </div>
-    </td>
-    <td class="delta ${delta>0?'delta-up':delta<0?'delta-down':'delta-flat'}">${delta>0?'+':''}${delta}</td>
-  `;
-  rankingsTbody.appendChild(tr);
-});
+const BASE_PASS = {
+  BUF:{1:.52,2:.59,3:.73,4:.62}, MIA:{1:.50,2:.60,3:.74,4:.58},
+  NE: {1:.46,2:.55,3:.70,4:.55}, NYJ:{1:.48,2:.57,3:.72,4:.57},
+  BAL:{1:.44,2:.52,3:.68,4:.60}, CIN:{1:.53,2:.62,3:.75,4:.60},
+  CLE:{1:.45,2:.54,3:.69,4:.55}, PIT:{1:.47,2:.56,3:.71,4:.57},
+  HOU:{1:.50,2:.59,3:.73,4:.58}, IND:{1:.47,2:.56,3:.70,4:.56},
+  JAX:{1:.50,2:.60,3:.74,4:.58}, TEN:{1:.44,2:.53,3:.68,4:.54},
+  KC: {1:.49,2:.58,3:.72,4:.60}, LV: {1:.49,2:.58,3:.72,4:.57},
+  LAC:{1:.52,2:.61,3:.74,4:.60}, DEN:{1:.48,2:.57,3:.71,4:.56},
+  DAL:{1:.51,2:.60,3:.74,4:.59}, NYG:{1:.46,2:.55,3:.70,4:.55},
+  PHI:{1:.47,2:.56,3:.70,4:.57}, WAS:{1:.50,2:.59,3:.73,4:.58},
+  CHI:{1:.49,2:.58,3:.72,4:.57}, DET:{1:.50,2:.59,3:.73,4:.60},
+  GB: {1:.50,2:.59,3:.73,4:.58}, MIN:{1:.51,2:.60,3:.74,4:.59},
+  ATL:{1:.48,2:.57,3:.71,4:.57}, CAR:{1:.49,2:.58,3:.72,4:.56},
+  NO: {1:.47,2:.56,3:.70,4:.56}, TB: {1:.51,2:.60,3:.74,4:.59},
+  ARI:{1:.51,2:.60,3:.74,4:.58}, LAR:{1:.48,2:.57,3:.71,4:.57},
+  SF: {1:.44,2:.53,3:.68,4:.55}, SEA:{1:.50,2:.59,3:.73,4:.58},
+};
 
-// ── SEASON LOG ──────────────────────────────────────────────────────────────
-const seasonLog = [
-  { week:'Week 10', record:'—/14', acc:'—', notes:'In progress · results after Nov 16' },
-];
+const OFF_EPA = {
+  BUF:.08,MIA:.05,NE:-.06,NYJ:-.03,
+  BAL:.10,CIN:.06,CLE:-.04,PIT:.02,
+  HOU:.07,IND:.01,JAX:-.02,TEN:-.05,
+  KC:.12,LV:-.03,LAC:.08,DEN:.04,
+  DAL:.06,NYG:-.05,PHI:.09,WAS:.03,
+  CHI:-.02,DET:.10,GB:.07,MIN:.08,
+  ATL:.04,CAR:-.07,NO:.01,TB:.05,
+  ARI:.02,LAR:.07,SF:.11,SEA:.06,
+};
+const DEF_EPA = {
+  BUF:.04,MIA:.08,NE:.11,NYJ:-.02,
+  BAL:-.05,CIN:.06,CLE:-.01,PIT:-.04,
+  HOU:.03,IND:.07,JAX:.09,TEN:.10,
+  KC:-.03,LV:.12,LAC:.01,DEN:-.06,
+  DAL:.05,NYG:.09,PHI:-.04,WAS:.06,
+  CHI:.08,DET:.03,GB:.02,MIN:-.07,
+  ATL:.07,CAR:.13,NO:.05,TB:.00,
+  ARI:.10,LAR:-.02,SF:-.08,SEA:-.06,
+};
 
-const logTbody = document.getElementById('log-tbody');
-seasonLog.forEach(row => {
-  const tr = document.createElement('tr');
-  tr.className = 'week-row';
-  tr.innerHTML = `<td>${row.week}</td><td class="record">${row.record}</td><td>${row.acc}</td><td style="color:var(--muted);font-size:0.82rem">${row.notes}</td>`;
-  logTbody.appendChild(tr);
-});
+function clamp(v,lo=0,hi=1){return Math.max(lo,Math.min(hi,v));}
+function pct(v){return (v*100).toFixed(1)+'%';}
 
-// Update season record card
-const wins = picks.filter(p=>p.result==='W').length;
-const losses = picks.filter(p=>p.result==='L').length;
-const played = wins + losses;
-document.getElementById('season-record').textContent = played ? `${wins}/${played}` : '—/—';
-document.getElementById('season-acc').textContent = played ? `${(wins/played*100).toFixed(1)}%` : '—';
+// ════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════════════════════
+function switchTab(panel, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-'+panel).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ════════════════════════════════════════════════════════════
+// LEVEL 1: PLAY CALL PREDICTOR
+// ════════════════════════════════════════════════════════════
+function scoreDiffShow(v) {
+  v = parseInt(v);
+  const lbl = v===0 ? 'Tied' : v>0 ? 'Up '+v : 'Down '+Math.abs(v);
+  document.getElementById('score-show').textContent = lbl;
+}
+function timeLeftShow(v) {
+  v = parseInt(v);
+  let lbl;
+  if(v>=1800) lbl='Start of half';
+  else if(v>=900) lbl=Math.round(v/60)+' min left';
+  else if(v>=300) lbl='5 min left';
+  else if(v>=120) lbl='2-min drill';
+  else lbl='Last 30 sec';
+  document.getElementById('secs-show').textContent = lbl;
+}
+function ylShow(v) {
+  v = parseInt(v);
+  const lbl = v===50 ? 'Midfield' : v<50 ? `Own ${100-v}` : `Opp ${v}`;
+  document.getElementById('yl-show').textContent = lbl;
+}
+
+function oppDefAdjust(opp) {
+  if (!opp || !DEF_RATINGS[opp]) return 0;
+  const d = DEF_RATINGS[opp];
+  return -(d.pe - LG_PASS_EPA)*0.4 + (d.re - LG_RUN_EPA)*0.3 - (d.pr - LG_PRESSURE)*0.5;
+}
+
+function situationAdj(ytg, yl, score, qtr, secs) {
+  let a = 0;
+  if (ytg<=2)       a-=0.12; else if(ytg<=5) a+=0.03;
+  else if(ytg<=10)  a+=0.07; else a+=0.14;
+  if (yl<=10)       a-=0.08; else if(yl<=20) a-=0.04;
+  if (score<=-14)   a+=0.12; else if(score<=-7) a+=0.07;
+  else if(score<=-3)a+=0.03; else if(score>=14) a-=0.08;
+  else if(score>=7) a-=0.04;
+  if (secs<=120 && score<=0) a+=0.10;
+  if (secs<=120 && score>0)  a-=0.06;
+  if (qtr===4 && secs<=300 && score<-3) a+=0.08;
+  return a;
+}
+
+function predict() {
+  const team=document.getElementById('team').value;
+  const opp=document.getElementById('opponent').value;
+  const down=parseInt(document.getElementById('down').value);
+  const ytg=parseInt(document.getElementById('ytg').value);
+  const yl=parseInt(document.getElementById('yardline').value);
+  const score=parseInt(document.getElementById('score').value);
+  const qtr=parseInt(document.getElementById('quarter').value);
+  const secs=parseInt(document.getElementById('seconds').value);
+  const loc=document.getElementById('location').value;
+
+  document.getElementById('pc-loading').style.display='block';
+  document.getElementById('pc-results').style.display='none';
+  document.getElementById('predict-btn').disabled=true;
+
+  setTimeout(()=>{
+    const base=BASE_PASS[team][down];
+    const adj=situationAdj(ytg,yl,score,qtr,secs);
+    const defAdj=oppDefAdjust(opp);
+    const hfaAdj = loc==='away' ? -0.03 : loc==='home' ? +0.02 : 0;
+    const teamPass=clamp(base+adj+defAdj+hfaAdj);
+    const lgPass=clamp(0.595+[-0.09,0,0.14,0.08][down-1]+adj*0.8+defAdj);
+
+    const ordinal=['','1st','2nd','3rd','4th'][down];
+    const ylLbl=yl===50?'Midfield':yl<50?`Own ${100-yl}`:`Opp ${yl}`;
+    const scoreLbl=score===0?'Tied':score>0?`Up ${score}`:`Down ${Math.abs(score)}`;
+    const locLbl={'home':'Home','away':'Away','neutral':'Neutral'}[loc];
+    document.getElementById('scenario-label').textContent=
+      `${team}${opp?' vs '+opp:''} · ${ordinal} & ${ytg} · ${ylLbl} · ${scoreLbl} · Q${qtr} · ${locLbl}`;
+
+    const v=document.getElementById('verdict');
+    if(teamPass>=0.65){v.className='verdict pass';v.textContent=`LIKELY PASS — ${pct(teamPass)}`;}
+    else if(teamPass<=0.35){v.className='verdict run';v.textContent=`LIKELY RUN — ${pct(1-teamPass)}`;}
+    else{v.className='verdict flip';v.textContent=`COIN FLIP — Pass ${pct(teamPass)} / Run ${pct(1-teamPass)}`;}
+
+    document.getElementById('bars').innerHTML=
+      [[opp?`${team} vs ${opp}`:team+' tendency',teamPass],['League avg',lgPass]]
+      .map(([lbl,p])=>`<div class="bar-row">
+        <div class="bar-label"><span>${lbl}</span><span>Pass ${pct(p)} · Run ${pct(1-p)}</span></div>
+        <div class="bar-track"><div class="bar-pass" style="width:${p*100}%"></div><div class="bar-run" style="width:${(1-p)*100}%"></div></div>
+      </div>`).join('');
+
+    const facts=[];
+    if(ytg<=2)       facts.push(['Short yardage','Favors run']);
+    else if(ytg>=11) facts.push(['Long yardage','Favors pass']);
+    if(score<=-7)    facts.push(['Trailing','Pass to catch up']);
+    else if(score>=7)facts.push(['Leading','Run to kill clock']);
+    if(secs<=120)    facts.push(['2-min drill',score<=0?'Pass urgency':'Clock mgmt']);
+    if(yl<=15)       facts.push(['Red zone','Favors run/short pass']);
+    if(opp&&DEF_RATINGS[opp]){
+      const d=DEF_RATINGS[opp];
+      if(d.pe-LG_PASS_EPA<-0.05) facts.push([`${opp} pass D`,'Elite — nudge toward run']);
+      else if(d.pe-LG_PASS_EPA>0.05) facts.push([`${opp} pass D`,'Weak — favors passing']);
+      if(d.re-LG_RUN_EPA<-0.05)  facts.push([`${opp} run D`,'Elite — nudge toward pass']);
+      if(d.pr-LG_PRESSURE>0.04)  facts.push([`${opp} pressure`,`${(d.pr*100).toFixed(0)}% — reduces pass %`]);
+    }
+    facts.push([`${ordinal} down`,BASE_PASS[team][down]>=0.60?'Pass-heavy down':'Run/pass balanced']);
+    if(loc==='away') facts.push(['Away game','Noise/travel → slight pass suppression']);
+    else if(loc==='home') facts.push(['Home game','Crowd advantage → slight pass boost']);
+    document.getElementById('factors').innerHTML=facts.slice(0,5).map(([k,v])=>
+      `<div class="factor-row"><span>${k}</span><span>${v}</span></div>`).join('');
+
+    document.getElementById('pc-loading').style.display='none';
+    document.getElementById('pc-results').style.display='block';
+    document.getElementById('predict-btn').disabled=false;
+    document.getElementById('pc-results').scrollIntoView({behavior:'smooth'});
+  },400);
+}
+
+// ════════════════════════════════════════════════════════════
+// LEVEL 2: GAME SIMULATOR  (Monte Carlo, drive-level)
+// ════════════════════════════════════════════════════════════
+
+// Drive outcome weights: [TD, FG, Punt, Turnover, MissedFG, Safety]
+const BASE_DRIVE = [0.195, 0.145, 0.42, 0.175, 0.055, 0.010];
+
+function teamDriveWeights(offTeam, defTeam) {
+  const offStr = OFF_EPA[offTeam] || 0;
+  const defStr = DEF_EPA[defTeam] || 0;
+  const edge = offStr - defStr;
+  const boost = edge * 0.8;
+  const w = [...BASE_DRIVE];
+  w[0] = Math.max(0.08, Math.min(0.35, w[0] + boost * 0.6));
+  w[1] = Math.max(0.06, Math.min(0.22, w[1] + boost * 0.3));
+  w[2] = Math.max(0.25, Math.min(0.55, w[2] - boost * 0.5));
+  w[3] = Math.max(0.08, Math.min(0.28, w[3] - boost * 0.3));
+  const sum = w.reduce((a,b)=>a+b,0);
+  return w.map(x=>x/sum);
+}
+
+function pickOutcome(weights) {
+  let r = Math.random(), cum = 0;
+  for(let i=0;i<weights.length;i++){
+    cum+=weights[i];
+    if(r<cum) return i;
+  }
+  return weights.length-1;
+}
+
+const DRIVE_SECS = {
+  0: ()=>170+Math.floor(Math.random()*80),
+  1: ()=>200+Math.floor(Math.random()*100),
+  2: ()=>140+Math.floor(Math.random()*80),
+  3: ()=>120+Math.floor(Math.random()*60),
+  4: ()=>180+Math.floor(Math.random()*80),
+  5: ()=>90+Math.floor(Math.random()*60),
+};
+
+function simulateGame(home, away) {
+  let hs=0, as=0;
+  let secsLeft=3600;
+  let offTeam = Math.random()<0.5 ? home : away;
+
+  for(let d=0; d<30 && secsLeft>0; d++){
+    const defTeam = offTeam===home ? away : home;
+    const weights = teamDriveWeights(offTeam, defTeam);
+
+    const scoreDiff = offTeam===home ? (hs-as) : (as-hs);
+    if(secsLeft<300 && scoreDiff>0) {
+      weights[0]*=0.5; weights[1]*=0.5; weights[2]*=1.8;
+      const s=weights.reduce((a,b)=>a+b,0); weights.forEach((_,i)=>weights[i]/=s);
+    }
+    if(secsLeft<120 && scoreDiff<-7) {
+      weights[0]*=1.4; weights[3]*=1.3; weights[2]*=0.3;
+      const s=weights.reduce((a,b)=>a+b,0); weights.forEach((_,i)=>weights[i]/=s);
+    }
+
+    const outcome = pickOutcome(weights);
+    const secs = Math.min(secsLeft, DRIVE_SECS[outcome]());
+    secsLeft -= secs;
+
+    if(outcome===0){
+      const r=Math.random();
+      const pts = r<0.95?7:r<0.99?6:8;
+      if(offTeam===home) hs+=pts; else as+=pts;
+    } else if(outcome===1){
+      if(offTeam===home) hs+=3; else as+=3;
+    } else if(outcome===5){
+      if(defTeam===home) hs+=2; else as+=2;
+      offTeam=defTeam;
+      continue;
+    }
+    offTeam = offTeam===home ? away : home;
+  }
+
+  if(Math.random()<0.42) hs+=3;
+  if(hs===as){ if(Math.random()<0.52) hs+=3; else as+=3; }
+
+  return [hs, as];
+}
+
+function mean(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function median(arr){ const s=[...arr].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; }
+function pctile(arr,p){ const s=[...arr].sort((a,b)=>a-b); return s[Math.floor(s.length*p/100)]; }
+
+function runSimulator() {
+  const home=document.getElementById('sim-home').value;
+  const away=document.getElementById('sim-away').value;
+  const N=parseInt(document.getElementById('sim-n').value);
+
+  if(home===away){alert('Home and away teams must be different.');return;}
+
+  document.getElementById('sim-loading').style.display='block';
+  document.getElementById('sim-results').style.display='none';
+  document.getElementById('sim-btn').disabled=true;
+
+  setTimeout(()=>{
+    const hs=[], as=[];
+    for(let i=0;i<N;i++){
+      const [h,a]=simulateGame(home,away);
+      const hfa=Math.random()<0.5?1:0;
+      hs.push(h+hfa); as.push(a);
+    }
+
+    const homeWins=hs.filter((h,i)=>h>as[i]).length;
+    const hwPct=homeWins/N;
+    const awPct=1-hwPct;
+    const hAvg=mean(hs), aAvg=mean(as);
+    const hMed=median(hs), aMed=median(as);
+    const margins=hs.map((h,i)=>h-as[i]);
+
+    document.getElementById('wp-home-team').textContent=home;
+    document.getElementById('wp-away-team').textContent=away;
+    document.getElementById('wp-home-pct').textContent=pct(hwPct);
+    document.getElementById('wp-away-pct').textContent=pct(awPct);
+    document.getElementById('wp-home-el').style.width=(hwPct*100)+'%';
+    document.getElementById('wp-away-el').style.width=(awPct*100)+'%';
+
+    document.getElementById('score-home-label').textContent=home+' (home)';
+    document.getElementById('score-away-label').textContent=away+' (away)';
+    document.getElementById('score-home-avg').textContent=hAvg.toFixed(1);
+    document.getElementById('score-away-avg').textContent=aAvg.toFixed(1);
+    document.getElementById('score-home-range').textContent=
+      `Median ${hMed.toFixed(0)} · 10–90th: ${pctile(hs,10)}–${pctile(hs,90)}`;
+    document.getElementById('score-away-range').textContent=
+      `Median ${aMed.toFixed(0)} · 10–90th: ${pctile(as,10)}–${pctile(as,90)}`;
+    document.getElementById('sim-total').textContent=(hAvg+aAvg).toFixed(1)+' pts';
+    const mg=Math.abs(hAvg-aAvg);
+    const fav=hAvg>=aAvg?home:away;
+    document.getElementById('sim-margin').textContent=`${fav} by ${mg.toFixed(1)}`;
+
+    const mg7h=margins.filter(m=>m>7).length/N;
+    const mg7a=margins.filter(m=>m<-7).length/N;
+    const w7=margins.filter(m=>Math.abs(m)<=7).length/N;
+    const blow14h=margins.filter(m=>m>14).length/N;
+    const blow14a=margins.filter(m=>m<-14).length/N;
+    document.getElementById('sim-script').innerHTML=[
+      [`${home} wins by 7+`, pct(mg7h)],
+      [`${away} wins by 7+`, pct(mg7a)],
+      ['Game decided within 7 pts', pct(w7)],
+      [`${home} blowout (14+)`, pct(blow14h)],
+      [`${away} blowout (14+)`, pct(blow14a)],
+    ].map(([k,v])=>`<div class="script-row"><span>${k}</span><span>${v}</span></div>`).join('');
+
+    const scoreCounter={};
+    hs.forEach((h,i)=>{
+      const a=as[i];
+      const key=h>a?`${h}-${a} ${home}`:h<a?`${a}-${h} ${away}`:`${h}-${a} TIE`;
+      scoreCounter[key]=(scoreCounter[key]||0)+1;
+    });
+    const top=Object.entries(scoreCounter).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    document.getElementById('sim-scores').innerHTML=top.map(([score,cnt])=>{
+      const parts=score.split(' ');
+      const sc=parts[0],wn=parts[1];
+      return `<tr><td>${sc}</td><td>${wn}</td><td>${pct(cnt/N)}</td></tr>`;
+    }).join('');
+
+    document.getElementById('sim-note').textContent=
+      `${N.toLocaleString()} simulations · Based on historical pass/run rates, EPA-adjusted yards, turnover rates · HFA included`;
+
+    document.getElementById('sim-loading').style.display='none';
+    document.getElementById('sim-results').style.display='block';
+    document.getElementById('sim-btn').disabled=false;
+    document.getElementById('sim-results').scrollIntoView({behavior:'smooth'});
+  }, 50);
+}
 </script>
 </body>
 </html>
