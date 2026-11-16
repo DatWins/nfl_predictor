@@ -334,6 +334,61 @@
   }
   .sim-sims-row label { text-transform: none; font-size: 0.82rem; color: #6b6b6b; margin: 0; }
   .sim-sims-row select { width: auto; flex: 0 0 auto; }
+
+  /* ── Picks & Rankings panel ── */
+  .picks-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 10px;
+    max-width: 580px;
+    margin: 0 auto 16px auto;
+  }
+  .picks-stat-card {
+    background: #fff;
+    border: 1px solid #e0d9d0;
+    border-radius: 10px;
+    padding: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+  .picks-stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #9a8f85; margin-bottom: 4px; }
+  .picks-stat-value { font-size: 1.4rem; font-weight: 800; color: #1a1a1a; }
+  .picks-stat-value.accent { color: #4a8a61; }
+  .picks-stat-value.gold   { color: #b08020; }
+  .picks-stat-sub { font-size: 0.7rem; color: #9a8f85; margin-top: 2px; }
+  .badge {
+    font-size: 0.68rem; font-weight: 600; padding: 2px 8px;
+    border-radius: 10px; background: rgba(193,123,78,0.12); color: #a8653c;
+    vertical-align: middle; margin-left: 6px;
+  }
+  .green-badge { background: rgba(74,138,97,0.12); color: #3a7a55; }
+  .picks-table-wrap { overflow-x: auto; border: 1px solid #e0d9d0; border-radius: 8px; }
+  .picks-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .picks-table thead th {
+    background: #f9f7f4; text-align: left; padding: 8px 12px;
+    color: #9a8f85; font-size: 0.7rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    border-bottom: 1px solid #e0d9d0; white-space: nowrap;
+  }
+  .picks-table tbody tr { border-bottom: 1px solid #f0ebe4; }
+  .picks-table tbody tr:last-child { border-bottom: none; }
+  .picks-table tbody tr:hover { background: #fdfbf9; }
+  .picks-table td { padding: 8px 12px; vertical-align: middle; color: #1a1a1a; }
+  .conf-num { font-size: 0.95rem; font-weight: 800; color: #9a8f85; }
+  .conf-num.top { color: #4a8a61; }
+  .pick-team-name { font-weight: 700; color: #c17b4e; }
+  .prob-wrap { display: flex; align-items: center; gap: 7px; min-width: 110px; }
+  .prob-track { flex: 1; height: 5px; background: #ede8e2; border-radius: 3px; overflow: hidden; }
+  .prob-fill { height: 100%; border-radius: 3px; }
+  .prob-pct { font-size: 0.78rem; font-weight: 700; min-width: 36px; text-align: right; }
+  .result-w { color: #4a8a61; font-weight: 700; }
+  .result-l { color: #c0392b; font-weight: 700; }
+  .result-p { color: #9a8f85; font-size: 0.75rem; }
+  .elo-bar-wrap { display: flex; align-items: center; gap: 7px; }
+  .elo-bar-track { width: 90px; height: 5px; background: #ede8e2; border-radius: 3px; overflow: hidden; }
+  .elo-bar-fill { height: 100%; border-radius: 3px; background: #c17b4e; }
+  .elo-delta { font-size: 0.75rem; min-width: 40px; text-align: right; }
+  .delta-up { color: #4a8a61; } .delta-dn { color: #c0392b; } .delta-fl { color: #9a8f85; }
+  @media (max-width:600px) { .picks-stats-row { grid-template-columns: repeat(2,1fr); } }
 </style>
 </head>
 <body>
@@ -342,14 +397,90 @@
 <p class="subtitle">Historical data · 2024–2025 play-by-play</p>
 
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('playcall', this)">Level 1 — Play Call</button>
+  <button class="tab active" onclick="switchTab('picks',    this)">📋 Picks &amp; Rankings</button>
+  <button class="tab"        onclick="switchTab('playcall', this)">Level 1 — Play Call</button>
   <button class="tab"        onclick="switchTab('gamesim',  this)">Level 2 — Game Simulator</button>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
+     PANEL 0: PICKS & RANKINGS
+     ══════════════════════════════════════════════════════════ -->
+<div id="panel-picks" class="panel active">
+
+  <!-- Season stat cards -->
+  <div class="picks-stats-row">
+    <div class="picks-stat-card">
+      <div class="picks-stat-label">Season Record</div>
+      <div class="picks-stat-value" id="season-record">—/—</div>
+      <div class="picks-stat-sub">2026 season · from Week 10</div>
+    </div>
+    <div class="picks-stat-card">
+      <div class="picks-stat-label">Accuracy</div>
+      <div class="picks-stat-value accent" id="season-acc">—</div>
+      <div class="picks-stat-sub">vs 63.3% backtest avg</div>
+    </div>
+    <div class="picks-stat-card">
+      <div class="picks-stat-label">Backtest (2021–25)</div>
+      <div class="picks-stat-value gold">63.3%</div>
+      <div class="picks-stat-sub">1,420 games · beats HFA baseline</div>
+    </div>
+    <div class="picks-stat-card">
+      <div class="picks-stat-label">Model</div>
+      <div class="picks-stat-value" style="font-size:1rem;padding-top:4px">538 Elo</div>
+      <div class="picks-stat-sub">K=20 · HFA=65 · verified</div>
+    </div>
+  </div>
+
+  <!-- Current week picks -->
+  <div class="card">
+    <h2>Week 10 · 2026 Picks <span class="badge">Pre-kickoff · Nov 12–16</span></h2>
+    <div class="picks-table-wrap">
+      <table class="picks-table">
+        <thead>
+          <tr>
+            <th>Conf</th><th>Date</th><th>Matchup</th>
+            <th>My Pick</th><th>Elo Win%</th><th>Spread</th><th>Result</th>
+          </tr>
+        </thead>
+        <tbody id="picks-tbody"></tbody>
+      </table>
+    </div>
+    <p class="note" style="text-align:left;margin-top:8px">Conf = confidence rank (14 = most confident). Picks locked before first kickoff per project rules. Results updated after MNF.</p>
+  </div>
+
+  <!-- Power rankings -->
+  <div class="card">
+    <h2>Power Rankings <span class="badge green-badge">Post-Week 9 Elo</span></h2>
+    <div class="picks-table-wrap">
+      <table class="picks-table">
+        <thead>
+          <tr><th>#</th><th>Team</th><th>Elo</th><th>Strength</th><th>vs Avg</th></tr>
+        </thead>
+        <tbody id="rankings-tbody"></tbody>
+      </table>
+    </div>
+    <p class="note" style="text-align:left;margin-top:8px">Average team = 1505. Each 25-pt gap ≈ 3.6% win probability difference on a neutral field.</p>
+  </div>
+
+  <!-- Season log -->
+  <div class="card">
+    <h2>Season Log <span class="badge">2026</span></h2>
+    <div class="picks-table-wrap">
+      <table class="picks-table">
+        <thead>
+          <tr><th>Week</th><th>Record</th><th>Accuracy</th><th>Notes</th></tr>
+        </thead>
+        <tbody id="log-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /panel-picks -->
+
+<!-- ══════════════════════════════════════════════════════════
      PANEL 1: PLAY CALL
      ══════════════════════════════════════════════════════════ -->
-<div id="panel-playcall" class="panel active">
+<div id="panel-playcall" class="panel">
 
   <div class="card">
     <h2>Game Situation</h2>
@@ -664,6 +795,105 @@ function switchTab(panel, btn) {
   document.getElementById('panel-'+panel).classList.add('active');
   btn.classList.add('active');
 }
+
+// ════════════════════════════════════════════════════════════
+// PICKS & RANKINGS
+// ════════════════════════════════════════════════════════════
+(function(){
+  const picks = [
+    { date:'Thu 11/13', away:'WAS', home:'NYG', spread:'NYG -1.5', winPct:53.9, pickTeam:'NYG', result:null },
+    { date:'Thu 11/13', away:'NE',  home:'DET', spread:'DET -3.5', winPct:55.7, pickTeam:'DET', result:null },
+    { date:'Sun 11/15', away:'CIN', home:'ATL', spread:'ATL -2.5', winPct:41.8, pickTeam:'CIN', result:null },
+    { date:'Sun 11/15', away:'DEN', home:'CAR', spread:'DEN -6.5', winPct:65.3, pickTeam:'DEN', result:null },
+    { date:'Sun 11/15', away:'KC',  home:'DAL', spread:'DAL -1.5', winPct:45.1, pickTeam:'KC',  result:null },
+    { date:'Sun 11/15', away:'JAX', home:'CLE', spread:'JAX -9.5', winPct:61.3, pickTeam:'JAX', result:null },
+    { date:'Sun 11/15', away:'MIN', home:'GB',  spread:'GB -2.5',  winPct:56.1, pickTeam:'GB',  result:null },
+    { date:'Sun 11/15', away:'TEN', home:'IND', spread:'IND -6.0', winPct:26.6, pickTeam:'TEN', result:null },
+    { date:'Sun 11/15', away:'BUF', home:'MIA', spread:'BUF -9.5', winPct:61.7, pickTeam:'BUF', result:null },
+    { date:'Sun 11/15', away:'NYJ', home:'NO',  spread:'NO -4.5',  winPct:69.3, pickTeam:'NO',  result:null },
+    { date:'Sun 11/15', away:'SF',  home:'ARI', spread:'SF -6.0',  winPct:64.4, pickTeam:'SF',  result:null },
+    { date:'Sun 11/15', away:'LV',  home:'SEA', spread:'SEA -13.5',winPct:90.4, pickTeam:'SEA', result:null },
+    { date:'Sun 11/15', away:'PIT', home:'HOU', spread:'HOU -4.5', winPct:28.1, pickTeam:'PIT', result:null },
+    { date:'Mon 11/16', away:'LAC', home:'BAL', spread:'BAL -3.5', winPct:61.5, pickTeam:'BAL', result:null },
+  ];
+
+  // Confidence rank: highest winPct = rank 14
+  const sorted = [...picks].sort((a,b)=>b.winPct-a.winPct);
+  sorted.forEach((g,i) => { const orig = picks.find(p=>p.date===g.date&&p.away===g.away&&p.home===g.home); if(orig) orig.confRank = picks.length-i; });
+
+  function barColor(p){ return p>=75?'#4a8a61':p>=60?'#c17b4e':p>=50?'#b08020':'#c0392b'; }
+
+  const tbody = document.getElementById('picks-tbody');
+  picks.forEach(g => {
+    const tr = document.createElement('tr');
+    const res = g.result==='W' ? '<span class="result-w">✓ W</span>'
+              : g.result==='L' ? '<span class="result-l">✗ L</span>'
+              : '<span class="result-p">pending</span>';
+    tr.innerHTML = `
+      <td><span class="conf-num ${(g.confRank||0)>=12?'top':''}">${g.confRank||'—'}</span></td>
+      <td style="color:#9a8f85;font-size:0.8rem;white-space:nowrap">${g.date}</td>
+      <td style="white-space:nowrap"><span style="color:#9a8f85">${g.away}</span> @ <strong>${g.home}</strong></td>
+      <td><span class="pick-team-name">${g.pickTeam}</span></td>
+      <td><div class="prob-wrap">
+        <div class="prob-track"><div class="prob-fill" style="width:${g.winPct}%;background:${barColor(g.winPct)}"></div></div>
+        <span class="prob-pct" style="color:${barColor(g.winPct)}">${g.winPct.toFixed(1)}%</span>
+      </div></td>
+      <td style="color:#9a8f85;font-size:0.8rem">${g.spread}</td>
+      <td>${res}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Season summary
+  const wins = picks.filter(p=>p.result==='W').length;
+  const losses = picks.filter(p=>p.result==='L').length;
+  const played = wins+losses;
+  document.getElementById('season-record').textContent = played ? `${wins}/${played}` : '—/—';
+  document.getElementById('season-acc').textContent = played ? `${(wins/played*100).toFixed(1)}%` : '—';
+
+  // Power rankings
+  const rankings = [
+    {team:'SEA',elo:1612,div:'NFC West'},{team:'KC',elo:1584,div:'AFC West'},
+    {team:'BAL',elo:1572,div:'AFC North'},{team:'BUF',elo:1561,div:'AFC East'},
+    {team:'NO',elo:1554,div:'NFC South'},{team:'IND',elo:1548,div:'AFC South'},
+    {team:'HOU',elo:1541,div:'AFC South'},{team:'GB',elo:1536,div:'NFC North'},
+    {team:'SF',elo:1528,div:'NFC West'},{team:'DEN',elo:1521,div:'AFC West'},
+    {team:'MIN',elo:1518,div:'NFC North'},{team:'ATL',elo:1514,div:'NFC South'},
+    {team:'DAL',elo:1511,div:'NFC East'},{team:'LAC',elo:1508,div:'AFC West'},
+    {team:'DET',elo:1505,div:'NFC North'},{team:'MIA',elo:1502,div:'AFC East'},
+    {team:'NYG',elo:1498,div:'NFC East'},{team:'PIT',elo:1495,div:'AFC North'},
+    {team:'NYJ',elo:1489,div:'AFC East'},{team:'JAX',elo:1485,div:'AFC South'},
+    {team:'ARI',elo:1479,div:'NFC West'},{team:'CIN',elo:1472,div:'AFC North'},
+    {team:'WAS',elo:1468,div:'NFC East'},{team:'CLE',elo:1461,div:'AFC North'},
+    {team:'LV',elo:1448,div:'AFC West'},{team:'TEN',elo:1442,div:'AFC South'},
+    {team:'NE',elo:1438,div:'AFC East'},{team:'CAR',elo:1431,div:'NFC South'},
+    {team:'CHI',elo:1428,div:'NFC North'},{team:'PHI',elo:1424,div:'NFC East'},
+    {team:'TB',elo:1419,div:'NFC South'},{team:'LAR',elo:1415,div:'NFC West'},
+  ];
+  const maxElo=Math.max(...rankings.map(r=>r.elo));
+  const minElo=Math.min(...rankings.map(r=>r.elo));
+  const rtbody=document.getElementById('rankings-tbody');
+  rankings.forEach((r,i)=>{
+    const delta=r.elo-1505;
+    const bw=((r.elo-minElo)/(maxElo-minElo)*100).toFixed(1);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="font-weight:700;color:${i<3?'#b08020':'#9a8f85'}">${i+1}</td>
+      <td><strong>${r.team}</strong> <span style="color:#9a8f85;font-size:0.75rem">${r.div}</span></td>
+      <td style="font-weight:700">${r.elo}</td>
+      <td><div class="elo-bar-wrap"><div class="elo-bar-track"><div class="elo-bar-fill" style="width:${bw}%"></div></div></div></td>
+      <td class="elo-delta ${delta>0?'delta-up':delta<0?'delta-dn':'delta-fl'}">${delta>0?'+':''}${delta}</td>`;
+    rtbody.appendChild(tr);
+  });
+
+  // Season log
+  const logTbody=document.getElementById('log-tbody');
+  [{week:'Week 10',record:'—/14',acc:'—',notes:'In progress · results after Nov 16 MNF'}]
+    .forEach(row=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td style="font-weight:700;color:#c17b4e">${row.week}</td><td style="font-weight:700">${row.record}</td><td>${row.acc}</td><td style="color:#9a8f85;font-size:0.82rem">${row.notes}</td>`;
+      logTbody.appendChild(tr);
+    });
+})();
 
 // ════════════════════════════════════════════════════════════
 // LEVEL 1: PLAY CALL PREDICTOR
