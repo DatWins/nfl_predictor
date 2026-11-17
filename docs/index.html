@@ -361,6 +361,13 @@
     vertical-align: middle; margin-left: 6px;
   }
   .green-badge { background: rgba(74,138,97,0.12); color: #3a7a55; }
+  .week-btn {
+    padding: 6px 18px; border-radius: 16px; border: 1px solid #d0c8be;
+    background: #fff; color: #6b6b6b; font-size: 0.84rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .week-btn.active { background: #c17b4e; color: #fff; border-color: #c17b4e; }
+  .week-btn:not(.active):hover { border-color: #c17b4e; color: #c17b4e; }
   .picks-table-wrap { overflow-x: auto; border: 1px solid #e0d9d0; border-radius: 8px; }
   .picks-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; table-layout: fixed; }
   .picks-table thead th {
@@ -432,9 +439,15 @@
     </div>
   </div>
 
+  <!-- Week selector -->
+  <div style="display:flex;justify-content:center;gap:8px;margin-bottom:16px">
+    <button class="week-btn active" id="wbtn-11" onclick="showWeek(11)">Week 11</button>
+    <button class="week-btn" id="wbtn-10" onclick="showWeek(10)">Week 10</button>
+  </div>
+
   <!-- Current week picks -->
   <div class="card">
-    <h2>Week 10 · 2026 Picks <span class="badge">Pre-kickoff · Nov 12–16</span></h2>
+    <h2 id="picks-card-title">Week 11 · 2026 Picks <span class="badge" id="picks-card-badge">Pre-kickoff · Nov 19–23</span></h2>
     <div class="picks-table-wrap">
       <table class="picks-table">
         <colgroup>
@@ -450,12 +463,12 @@
         <tbody id="picks-tbody"></tbody>
       </table>
     </div>
-    <p class="note" style="text-align:left;margin-top:8px">Conf = confidence rank (14 = most confident). Picks locked before first kickoff per project rules. Results updated after MNF.</p>
+    <p class="note" style="text-align:left;margin-top:8px">Conf = confidence rank within the week (highest = most confident pick). Picks locked before first kickoff per project rules.</p>
   </div>
 
   <!-- Power rankings -->
   <div class="card">
-    <h2>Power Rankings <span class="badge green-badge">Post-Week 9 Elo</span></h2>
+    <h2>Power Rankings <span class="badge green-badge">Post-Week 10 Elo</span></h2>
     <div class="picks-table-wrap">
       <table class="picks-table">
         <thead>
@@ -805,70 +818,103 @@ function switchTab(panel, btn) {
 // PICKS & RANKINGS
 // ════════════════════════════════════════════════════════════
 (function(){
-  const picks = [
-    // ── Week 11 (Byes: ATL CLE GB LAR NE SEA) ──────────────────────────────
-    { date:'Thu 11/19', away:'IND', home:'HOU', spread:'HOU -11.5', winPct:55.8, pickTeam:'HOU', result:null },
-    { date:'Sun 11/22', away:'MIA', home:'BUF', spread:'BUF -16.5', winPct:68.8, pickTeam:'BUF', result:null },
-    { date:'Sun 11/22', away:'BAL', home:'CAR', spread:'CAR -2.5',  winPct:42.2, pickTeam:'BAL', result:null },
-    { date:'Sun 11/22', away:'NO',  home:'CHI', spread:'CHI -11.5', winPct:42.9, pickTeam:'NO',  result:null },
-    { date:'Sun 11/22', away:'TEN', home:'DAL', spread:'DAL -8.5',  winPct:68.3, pickTeam:'DAL', result:null },
-    { date:'Sun 11/22', away:'TB',  home:'DET', spread:'DET -6.5',  winPct:71.4, pickTeam:'DET', result:null },
-    { date:'Sun 11/22', away:'ARI', home:'KC',  spread:'KC -16.5',  winPct:74.5, pickTeam:'KC',  result:null },
-    { date:'Sun 11/22', away:'PIT', home:'PHI', spread:'PIT -4.5',  winPct:49.6, pickTeam:'PIT', result:null },
-    { date:'Sun 11/22', away:'NYJ', home:'LAC', spread:'LAC -3.5',  winPct:64.0, pickTeam:'LAC', result:null },
-    { date:'Sun 11/22', away:'JAX', home:'NYG', spread:'JAX -6.0',  winPct:41.2, pickTeam:'JAX', result:null },
-    { date:'Sun 11/22', away:'LV',  home:'DEN', spread:'DEN -10.0', winPct:69.4, pickTeam:'DEN', result:null },
-    { date:'Sun 11/22', away:'MIN', home:'SF',  spread:'SF -3.0',   winPct:51.3, pickTeam:'SF',  result:null }, // Mexico City neutral
-    { date:'Mon 11/23', away:'CIN', home:'WAS', spread:'CIN -6.5',  winPct:41.3, pickTeam:'CIN', result:null },
-    // ── Week 10 (Final: 7/14 · 50.0%) ─────────────────────────────────────
-    { date:'Thu 11/13', away:'WAS', home:'NYG', spread:'NYG -1.5', winPct:53.9, pickTeam:'NYG', result:'L' }, // WAS 24–21
-    { date:'Sun 11/15', away:'NE',  home:'DET', spread:'DET -3.5', winPct:55.7, pickTeam:'DET', result:'W' }, // DET 35–10
-    { date:'Sun 11/15', away:'KC',  home:'ATL', spread:'ATL -2.5', winPct:41.8, pickTeam:'KC',  result:'W' }, // KC 35–13
-    { date:'Sun 11/15', away:'HOU', home:'CLE', spread:'HOU -6.5', winPct:65.3, pickTeam:'HOU', result:'L' }, // CLE 27–24
-    { date:'Sun 11/15', away:'MIN', home:'GB',  spread:'GB -2.5',  winPct:56.1, pickTeam:'GB',  result:'L' }, // MIN 30–10
-    { date:'Sun 11/15', away:'MIA', home:'IND', spread:'IND -6.0', winPct:26.6, pickTeam:'MIA', result:'L' }, // IND 24–22
-    { date:'Sun 11/15', away:'CAR', home:'NO',  spread:'NO -4.5',  winPct:69.3, pickTeam:'NO',  result:'L' }, // CAR 20–17
-    { date:'Sun 11/15', away:'BUF', home:'NYJ', spread:'BUF -9.5', winPct:61.7, pickTeam:'BUF', result:'W' }, // BUF 31–12
-    { date:'Sun 11/15', away:'JAX', home:'TEN', spread:'JAX -9.5', winPct:61.3, pickTeam:'JAX', result:'W' }, // JAX 40–23
-    { date:'Sun 11/15', away:'LAR', home:'ARI', spread:'LAR -6.0', winPct:64.4, pickTeam:'LAR', result:'W' }, // LAR 34–6
-    { date:'Sun 11/15', away:'LV',  home:'SEA', spread:'SEA -13.5',winPct:90.4, pickTeam:'SEA', result:'W' }, // SEA 21–13
-    { date:'Sun 11/15', away:'SF',  home:'DAL', spread:'SF -6.0',  winPct:45.1, pickTeam:'SF',  result:'W' }, // SF 46–40
-    { date:'Sun 11/15', away:'PIT', home:'CIN', spread:'CIN -4.5', winPct:28.1, pickTeam:'PIT', result:'L' }, // CIN 38–18
-    { date:'Mon 11/16', away:'LAC', home:'BAL', spread:'BAL -3.5', winPct:61.5, pickTeam:'BAL', result:'L' }, // LAC 23–20
-  ];
-
-  // Confidence rank: highest winPct = rank 14
-  const sorted = [...picks].sort((a,b)=>b.winPct-a.winPct);
-  sorted.forEach((g,i) => { const orig = picks.find(p=>p.date===g.date&&p.away===g.away&&p.home===g.home); if(orig) orig.confRank = picks.length-i; });
+  const weekData = {
+    11: {
+      label: 'Week 11 · 2026 Picks',
+      badge: 'Pre-kickoff · Nov 19–23',
+      picks: [
+        { date:'Thu 11/19', away:'IND', home:'HOU', spread:'HOU -11.5', winPct:55.8, pickTeam:'HOU', result:null },
+        { date:'Sun 11/22', away:'MIA', home:'BUF', spread:'BUF -16.5', winPct:68.8, pickTeam:'BUF', result:null },
+        { date:'Sun 11/22', away:'BAL', home:'CAR', spread:'CAR -2.5',  winPct:42.2, pickTeam:'BAL', result:null },
+        { date:'Sun 11/22', away:'NO',  home:'CHI', spread:'CHI -11.5', winPct:42.9, pickTeam:'NO',  result:null },
+        { date:'Sun 11/22', away:'TEN', home:'DAL', spread:'DAL -8.5',  winPct:68.3, pickTeam:'DAL', result:null },
+        { date:'Sun 11/22', away:'TB',  home:'DET', spread:'DET -6.5',  winPct:71.4, pickTeam:'DET', result:null },
+        { date:'Sun 11/22', away:'ARI', home:'KC',  spread:'KC -16.5',  winPct:74.5, pickTeam:'KC',  result:null },
+        { date:'Sun 11/22', away:'PIT', home:'PHI', spread:'PIT -4.5',  winPct:49.6, pickTeam:'PIT', result:null },
+        { date:'Sun 11/22', away:'NYJ', home:'LAC', spread:'LAC -3.5',  winPct:64.0, pickTeam:'LAC', result:null },
+        { date:'Sun 11/22', away:'JAX', home:'NYG', spread:'JAX -6.0',  winPct:41.2, pickTeam:'JAX', result:null },
+        { date:'Sun 11/22', away:'LV',  home:'DEN', spread:'DEN -10.0', winPct:69.4, pickTeam:'DEN', result:null },
+        { date:'Sun 11/22', away:'MIN', home:'SF',  spread:'SF -3.0',   winPct:51.3, pickTeam:'SF',  result:null },
+        { date:'Mon 11/23', away:'CIN', home:'WAS', spread:'CIN -6.5',  winPct:41.3, pickTeam:'CIN', result:null },
+      ]
+    },
+    10: {
+      label: 'Week 10 · 2026 Picks',
+      badge: 'Final · 7/14 · 50.0%',
+      picks: [
+        { date:'Thu 11/13', away:'WAS', home:'NYG', spread:'NYG -1.5', winPct:53.9, pickTeam:'NYG', result:'L' }, // WAS 24–21
+        { date:'Sun 11/15', away:'NE',  home:'DET', spread:'DET -3.5', winPct:55.7, pickTeam:'DET', result:'W' }, // DET 35–10
+        { date:'Sun 11/15', away:'KC',  home:'ATL', spread:'ATL -2.5', winPct:41.8, pickTeam:'KC',  result:'W' }, // KC 35–13
+        { date:'Sun 11/15', away:'HOU', home:'CLE', spread:'HOU -6.5', winPct:65.3, pickTeam:'HOU', result:'L' }, // CLE 27–24
+        { date:'Sun 11/15', away:'MIN', home:'GB',  spread:'GB -2.5',  winPct:56.1, pickTeam:'GB',  result:'L' }, // MIN 30–10
+        { date:'Sun 11/15', away:'MIA', home:'IND', spread:'IND -6.0', winPct:26.6, pickTeam:'MIA', result:'L' }, // IND 24–22
+        { date:'Sun 11/15', away:'CAR', home:'NO',  spread:'NO -4.5',  winPct:69.3, pickTeam:'NO',  result:'L' }, // CAR 20–17
+        { date:'Sun 11/15', away:'BUF', home:'NYJ', spread:'BUF -9.5', winPct:61.7, pickTeam:'BUF', result:'W' }, // BUF 31–12
+        { date:'Sun 11/15', away:'JAX', home:'TEN', spread:'JAX -9.5', winPct:61.3, pickTeam:'JAX', result:'W' }, // JAX 40–23
+        { date:'Sun 11/15', away:'LAR', home:'ARI', spread:'LAR -6.0', winPct:64.4, pickTeam:'LAR', result:'W' }, // LAR 34–6
+        { date:'Sun 11/15', away:'LV',  home:'SEA', spread:'SEA -13.5',winPct:90.4, pickTeam:'SEA', result:'W' }, // SEA 21–13
+        { date:'Sun 11/15', away:'SF',  home:'DAL', spread:'SF -6.0',  winPct:45.1, pickTeam:'SF',  result:'W' }, // SF 46–40
+        { date:'Sun 11/15', away:'PIT', home:'CIN', spread:'CIN -4.5', winPct:28.1, pickTeam:'PIT', result:'L' }, // CIN 38–18
+        { date:'Mon 11/16', away:'LAC', home:'BAL', spread:'BAL -3.5', winPct:61.5, pickTeam:'BAL', result:'L' }, // LAC 23–20
+      ]
+    }
+  };
 
   function barColor(p){ return p>=75?'#4a8a61':p>=60?'#c17b4e':p>=50?'#b08020':'#c0392b'; }
 
-  const tbody = document.getElementById('picks-tbody');
-  picks.forEach(g => {
-    const tr = document.createElement('tr');
-    const res = g.result==='W' ? '<span class="result-w">✓ W</span>'
-              : g.result==='L' ? '<span class="result-l">✗ L</span>'
-              : '<span class="result-p">pending</span>';
-    tr.innerHTML = `
-      <td><span class="conf-num ${(g.confRank||0)>=12?'top':''}">${g.confRank||'—'}</span></td>
-      <td style="color:#9a8f85;font-size:0.8rem;white-space:nowrap">${g.date}</td>
-      <td style="white-space:nowrap"><span style="color:#9a8f85">${g.away}</span> @ <strong>${g.home}</strong></td>
-      <td><span class="pick-team-name">${g.pickTeam}</span></td>
-      <td><div class="prob-wrap">
-        <div class="prob-track"><div class="prob-fill" style="width:${g.winPct}%;background:${barColor(g.winPct)}"></div></div>
-        <span class="prob-pct" style="color:${barColor(g.winPct)}">${g.winPct.toFixed(1)}%</span>
-      </div></td>
-      <td style="color:#9a8f85;font-size:0.8rem">${g.spread}</td>
-      <td>${res}</td>`;
-    tbody.appendChild(tr);
-  });
+  function renderPicks(wk) {
+    const { label, badge, picks } = weekData[wk];
 
-  // Season summary
-  const wins = picks.filter(p=>p.result==='W').length;
-  const losses = picks.filter(p=>p.result==='L').length;
+    // Update card header
+    document.getElementById('picks-card-title').innerHTML =
+      `${label} <span class="badge" id="picks-card-badge">${badge}</span>`;
+
+    // Confidence rank within this week's picks
+    const sorted = [...picks].sort((a,b)=>b.winPct-a.winPct);
+    sorted.forEach((g,i) => {
+      const orig = picks.find(p=>p.date===g.date&&p.away===g.away&&p.home===g.home);
+      if(orig) orig.confRank = picks.length - i;
+    });
+
+    const tbody = document.getElementById('picks-tbody');
+    tbody.innerHTML = '';
+    picks.forEach(g => {
+      const tr = document.createElement('tr');
+      const res = g.result==='W' ? '<span class="result-w">✓ W</span>'
+                : g.result==='L' ? '<span class="result-l">✗ L</span>'
+                : '<span class="result-p">pending</span>';
+      tr.innerHTML = `
+        <td><span class="conf-num ${(g.confRank||0)>=picks.length-2?'top':''}">${g.confRank||'—'}</span></td>
+        <td style="color:#9a8f85;font-size:0.8rem;white-space:nowrap">${g.date}</td>
+        <td style="white-space:nowrap"><span style="color:#9a8f85">${g.away}</span> @ <strong>${g.home}</strong></td>
+        <td><span class="pick-team-name">${g.pickTeam}</span></td>
+        <td><div class="prob-wrap">
+          <div class="prob-track"><div class="prob-fill" style="width:${g.winPct}%;background:${barColor(g.winPct)}"></div></div>
+          <span class="prob-pct" style="color:${barColor(g.winPct)}">${g.winPct.toFixed(1)}%</span>
+        </div></td>
+        <td style="color:#9a8f85;font-size:0.8rem">${g.spread}</td>
+        <td>${res}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Season summary (all completed picks across all weeks)
+  const allPicks = Object.values(weekData).flatMap(w => w.picks);
+  const wins = allPicks.filter(p=>p.result==='W').length;
+  const losses = allPicks.filter(p=>p.result==='L').length;
   const played = wins+losses;
   document.getElementById('season-record').textContent = played ? `${wins}/${played}` : '—/—';
   document.getElementById('season-acc').textContent = played ? `${(wins/played*100).toFixed(1)}%` : '—';
+
+  // Week switcher
+  window.showWeek = function(wk) {
+    renderPicks(wk);
+    document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('wbtn-'+wk).classList.add('active');
+  };
+
+  // Start on Week 11
+  renderPicks(11);
 
   // Power rankings
   const rankings = [
