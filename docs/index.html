@@ -362,21 +362,22 @@
   }
   .green-badge { background: rgba(74,138,97,0.12); color: #3a7a55; }
   .picks-table-wrap { overflow-x: auto; border: 1px solid #e0d9d0; border-radius: 8px; }
-  .picks-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .picks-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; table-layout: fixed; }
   .picks-table thead th {
-    background: #f9f7f4; text-align: left; padding: 8px 12px;
-    color: #9a8f85; font-size: 0.7rem; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.06em;
+    background: #f9f7f4; text-align: left; padding: 7px 8px;
+    color: #9a8f85; font-size: 0.68rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
     border-bottom: 1px solid #e0d9d0; white-space: nowrap;
   }
   .picks-table tbody tr { border-bottom: 1px solid #f0ebe4; }
   .picks-table tbody tr:last-child { border-bottom: none; }
   .picks-table tbody tr:hover { background: #fdfbf9; }
-  .picks-table td { padding: 8px 12px; vertical-align: middle; color: #1a1a1a; }
+  .picks-table td { padding: 7px 8px; vertical-align: middle; color: #1a1a1a; }
+  .picks-table thead th { padding: 7px 8px; }
   .conf-num { font-size: 0.95rem; font-weight: 800; color: #9a8f85; }
   .conf-num.top { color: #4a8a61; }
   .pick-team-name { font-weight: 700; color: #c17b4e; }
-  .prob-wrap { display: flex; align-items: center; gap: 7px; min-width: 110px; }
+  .prob-wrap { display: flex; align-items: center; gap: 5px; }
   .prob-track { flex: 1; height: 5px; background: #ede8e2; border-radius: 3px; overflow: hidden; }
   .prob-fill { height: 100%; border-radius: 3px; }
   .prob-pct { font-size: 0.78rem; font-weight: 700; min-width: 36px; text-align: right; }
@@ -436,10 +437,14 @@
     <h2>Week 10 · 2026 Picks <span class="badge">Pre-kickoff · Nov 12–16</span></h2>
     <div class="picks-table-wrap">
       <table class="picks-table">
+        <colgroup>
+          <col style="width:40px"><col style="width:72px"><col style="width:120px">
+          <col style="width:60px"><col style="width:130px"><col style="width:72px"><col style="width:60px">
+        </colgroup>
         <thead>
           <tr>
             <th>Conf</th><th>Date</th><th>Matchup</th>
-            <th>My Pick</th><th>Elo Win%</th><th>Spread</th><th>Result</th>
+            <th>Pick</th><th>Elo Win%</th><th>Spread</th><th>Result</th>
           </tr>
         </thead>
         <tbody id="picks-tbody"></tbody>
