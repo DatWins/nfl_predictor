@@ -806,6 +806,21 @@ function switchTab(panel, btn) {
 // ════════════════════════════════════════════════════════════
 (function(){
   const picks = [
+    // ── Week 11 (Byes: ATL CLE GB LAR NE SEA) ──────────────────────────────
+    { date:'Thu 11/19', away:'IND', home:'HOU', spread:'HOU -11.5', winPct:55.8, pickTeam:'HOU', result:null },
+    { date:'Sun 11/22', away:'MIA', home:'BUF', spread:'BUF -16.5', winPct:68.8, pickTeam:'BUF', result:null },
+    { date:'Sun 11/22', away:'BAL', home:'CAR', spread:'CAR -2.5',  winPct:42.2, pickTeam:'BAL', result:null },
+    { date:'Sun 11/22', away:'NO',  home:'CHI', spread:'CHI -11.5', winPct:42.9, pickTeam:'NO',  result:null },
+    { date:'Sun 11/22', away:'TEN', home:'DAL', spread:'DAL -8.5',  winPct:68.3, pickTeam:'DAL', result:null },
+    { date:'Sun 11/22', away:'TB',  home:'DET', spread:'DET -6.5',  winPct:71.4, pickTeam:'DET', result:null },
+    { date:'Sun 11/22', away:'ARI', home:'KC',  spread:'KC -16.5',  winPct:74.5, pickTeam:'KC',  result:null },
+    { date:'Sun 11/22', away:'PIT', home:'PHI', spread:'PIT -4.5',  winPct:49.6, pickTeam:'PIT', result:null },
+    { date:'Sun 11/22', away:'NYJ', home:'LAC', spread:'LAC -3.5',  winPct:64.0, pickTeam:'LAC', result:null },
+    { date:'Sun 11/22', away:'JAX', home:'NYG', spread:'JAX -6.0',  winPct:41.2, pickTeam:'JAX', result:null },
+    { date:'Sun 11/22', away:'LV',  home:'DEN', spread:'DEN -10.0', winPct:69.4, pickTeam:'DEN', result:null },
+    { date:'Sun 11/22', away:'MIN', home:'SF',  spread:'SF -3.0',   winPct:51.3, pickTeam:'SF',  result:null }, // Mexico City neutral
+    { date:'Mon 11/23', away:'CIN', home:'WAS', spread:'CIN -6.5',  winPct:41.3, pickTeam:'CIN', result:null },
+    // ── Week 10 (Final: 7/14 · 50.0%) ─────────────────────────────────────
     { date:'Thu 11/13', away:'WAS', home:'NYG', spread:'NYG -1.5', winPct:53.9, pickTeam:'NYG', result:'L' }, // WAS 24–21
     { date:'Sun 11/15', away:'NE',  home:'DET', spread:'DET -3.5', winPct:55.7, pickTeam:'DET', result:'W' }, // DET 35–10
     { date:'Sun 11/15', away:'KC',  home:'ATL', spread:'ATL -2.5', winPct:41.8, pickTeam:'KC',  result:'W' }, // KC 35–13
@@ -857,22 +872,23 @@ function switchTab(panel, btn) {
 
   // Power rankings
   const rankings = [
-    {team:'SEA',elo:1612,div:'NFC West'},{team:'KC',elo:1584,div:'AFC West'},
-    {team:'BAL',elo:1572,div:'AFC North'},{team:'BUF',elo:1561,div:'AFC East'},
-    {team:'NO',elo:1554,div:'NFC South'},{team:'IND',elo:1548,div:'AFC South'},
-    {team:'HOU',elo:1541,div:'AFC South'},{team:'GB',elo:1536,div:'NFC North'},
-    {team:'SF',elo:1528,div:'NFC West'},{team:'DEN',elo:1521,div:'AFC West'},
-    {team:'MIN',elo:1518,div:'NFC North'},{team:'ATL',elo:1514,div:'NFC South'},
-    {team:'DAL',elo:1511,div:'NFC East'},{team:'LAC',elo:1508,div:'AFC West'},
-    {team:'DET',elo:1505,div:'NFC North'},{team:'MIA',elo:1502,div:'AFC East'},
-    {team:'NYG',elo:1498,div:'NFC East'},{team:'PIT',elo:1495,div:'AFC North'},
-    {team:'NYJ',elo:1489,div:'AFC East'},{team:'JAX',elo:1485,div:'AFC South'},
-    {team:'ARI',elo:1479,div:'NFC West'},{team:'CIN',elo:1472,div:'AFC North'},
-    {team:'WAS',elo:1468,div:'NFC East'},{team:'CLE',elo:1461,div:'AFC North'},
-    {team:'LV',elo:1448,div:'AFC West'},{team:'TEN',elo:1442,div:'AFC South'},
-    {team:'NE',elo:1438,div:'AFC East'},{team:'CAR',elo:1431,div:'NFC South'},
-    {team:'CHI',elo:1428,div:'NFC North'},{team:'PHI',elo:1424,div:'NFC East'},
-    {team:'TB',elo:1419,div:'NFC South'},{team:'LAR',elo:1415,div:'NFC West'},
+    // Post-Week 10 Elo ratings (K=20, HFA=65)
+    {team:'SEA',elo:1616,div:'NFC West'},{team:'KC',elo:1590,div:'AFC West'},
+    {team:'BUF',elo:1567,div:'AFC East'},{team:'BAL',elo:1562,div:'AFC North'},
+    {team:'IND',elo:1555,div:'AFC South'},{team:'NO',elo:1542,div:'NFC South'},
+    {team:'SF',elo:1536,div:'NFC West'},{team:'HOU',elo:1531,div:'AFC South'},
+    {team:'GB',elo:1527,div:'NFC North'},{team:'MIN',elo:1527,div:'NFC North'},
+    {team:'DEN',elo:1521,div:'AFC West'},{team:'LAC',elo:1518,div:'AFC West'},
+    {team:'DET',elo:1513,div:'NFC North'},{team:'ATL',elo:1508,div:'NFC South'},
+    {team:'DAL',elo:1503,div:'NFC East'},{team:'MIA',elo:1495,div:'AFC East'},
+    {team:'JAX',elo:1492,div:'AFC South'},{team:'NYG',elo:1489,div:'NFC East'},
+    {team:'PIT',elo:1486,div:'AFC North'},{team:'NYJ',elo:1483,div:'AFC East'},
+    {team:'CIN',elo:1481,div:'AFC North'},{team:'WAS',elo:1477,div:'NFC East'},
+    {team:'CLE',elo:1471,div:'AFC North'},{team:'ARI',elo:1469,div:'NFC West'},
+    {team:'LV',elo:1444,div:'AFC West'},{team:'CAR',elo:1443,div:'NFC South'},
+    {team:'TEN',elo:1435,div:'AFC South'},{team:'NE',elo:1430,div:'AFC East'},
+    {team:'CHI',elo:1428,div:'NFC North'},{team:'LAR',elo:1425,div:'NFC West'},
+    {team:'PHI',elo:1424,div:'NFC East'},{team:'TB',elo:1419,div:'NFC South'},
   ];
   const maxElo=Math.max(...rankings.map(r=>r.elo));
   const minElo=Math.min(...rankings.map(r=>r.elo));
@@ -892,7 +908,8 @@ function switchTab(panel, btn) {
 
   // Season log
   const logTbody=document.getElementById('log-tbody');
-  [{week:'Week 10',record:'7/14',acc:'50.0%',notes:'Final · WAS upset NYG; CLE upset HOU; MIN beat GB; CAR upset NO; CIN beat PIT; LAC upset BAL'}]
+  [{week:'Week 11',record:'0/0',acc:'—',notes:'In progress · 13 games · Byes: ATL CLE GB LAR NE SEA'},
+    {week:'Week 10',record:'7/14',acc:'50.0%',notes:'Final · WAS upset NYG; CLE upset HOU; MIN beat GB; CAR upset NO; CIN beat PIT; LAC upset BAL'}]
     .forEach(row=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`<td style="font-weight:700;color:#c17b4e">${row.week}</td><td style="font-weight:700">${row.record}</td><td>${row.acc}</td><td style="color:#9a8f85;font-size:0.82rem">${row.notes}</td>`;
