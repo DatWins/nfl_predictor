@@ -806,20 +806,20 @@ function switchTab(panel, btn) {
 // ════════════════════════════════════════════════════════════
 (function(){
   const picks = [
-    { date:'Thu 11/13', away:'WAS', home:'NYG', spread:'NYG -1.5', winPct:53.9, pickTeam:'NYG', result:null },
-    { date:'Thu 11/13', away:'NE',  home:'DET', spread:'DET -3.5', winPct:55.7, pickTeam:'DET', result:null },
-    { date:'Sun 11/15', away:'CIN', home:'ATL', spread:'ATL -2.5', winPct:41.8, pickTeam:'CIN', result:null },
-    { date:'Sun 11/15', away:'DEN', home:'CAR', spread:'DEN -6.5', winPct:65.3, pickTeam:'DEN', result:null },
-    { date:'Sun 11/15', away:'KC',  home:'DAL', spread:'DAL -1.5', winPct:45.1, pickTeam:'KC',  result:null },
-    { date:'Sun 11/15', away:'JAX', home:'CLE', spread:'JAX -9.5', winPct:61.3, pickTeam:'JAX', result:null },
-    { date:'Sun 11/15', away:'MIN', home:'GB',  spread:'GB -2.5',  winPct:56.1, pickTeam:'GB',  result:null },
-    { date:'Sun 11/15', away:'TEN', home:'IND', spread:'IND -6.0', winPct:26.6, pickTeam:'TEN', result:null },
-    { date:'Sun 11/15', away:'BUF', home:'MIA', spread:'BUF -9.5', winPct:61.7, pickTeam:'BUF', result:null },
-    { date:'Sun 11/15', away:'NYJ', home:'NO',  spread:'NO -4.5',  winPct:69.3, pickTeam:'NO',  result:null },
-    { date:'Sun 11/15', away:'SF',  home:'ARI', spread:'SF -6.0',  winPct:64.4, pickTeam:'SF',  result:null },
-    { date:'Sun 11/15', away:'LV',  home:'SEA', spread:'SEA -13.5',winPct:90.4, pickTeam:'SEA', result:null },
-    { date:'Sun 11/15', away:'PIT', home:'HOU', spread:'HOU -4.5', winPct:28.1, pickTeam:'PIT', result:null },
-    { date:'Mon 11/16', away:'LAC', home:'BAL', spread:'BAL -3.5', winPct:61.5, pickTeam:'BAL', result:null },
+    { date:'Thu 11/13', away:'WAS', home:'NYG', spread:'NYG -1.5', winPct:53.9, pickTeam:'NYG', result:'L' }, // WAS 24–21
+    { date:'Sun 11/15', away:'NE',  home:'DET', spread:'DET -3.5', winPct:55.7, pickTeam:'DET', result:'W' }, // DET 35–10
+    { date:'Sun 11/15', away:'KC',  home:'ATL', spread:'ATL -2.5', winPct:41.8, pickTeam:'KC',  result:'W' }, // KC 35–13
+    { date:'Sun 11/15', away:'HOU', home:'CLE', spread:'HOU -6.5', winPct:65.3, pickTeam:'HOU', result:'L' }, // CLE 27–24
+    { date:'Sun 11/15', away:'MIN', home:'GB',  spread:'GB -2.5',  winPct:56.1, pickTeam:'GB',  result:'L' }, // MIN 30–10
+    { date:'Sun 11/15', away:'MIA', home:'IND', spread:'IND -6.0', winPct:26.6, pickTeam:'MIA', result:'L' }, // IND 24–22
+    { date:'Sun 11/15', away:'CAR', home:'NO',  spread:'NO -4.5',  winPct:69.3, pickTeam:'NO',  result:'L' }, // CAR 20–17
+    { date:'Sun 11/15', away:'BUF', home:'NYJ', spread:'BUF -9.5', winPct:61.7, pickTeam:'BUF', result:'W' }, // BUF 31–12
+    { date:'Sun 11/15', away:'JAX', home:'TEN', spread:'JAX -9.5', winPct:61.3, pickTeam:'JAX', result:'W' }, // JAX 40–23
+    { date:'Sun 11/15', away:'LAR', home:'ARI', spread:'LAR -6.0', winPct:64.4, pickTeam:'LAR', result:'W' }, // LAR 34–6
+    { date:'Sun 11/15', away:'LV',  home:'SEA', spread:'SEA -13.5',winPct:90.4, pickTeam:'SEA', result:'W' }, // SEA 21–13
+    { date:'Sun 11/15', away:'SF',  home:'DAL', spread:'SF -6.0',  winPct:45.1, pickTeam:'SF',  result:'W' }, // SF 46–40
+    { date:'Sun 11/15', away:'PIT', home:'CIN', spread:'CIN -4.5', winPct:28.1, pickTeam:'PIT', result:'L' }, // CIN 38–18
+    { date:'Mon 11/16', away:'LAC', home:'BAL', spread:'BAL -3.5', winPct:61.5, pickTeam:'BAL', result:'L' }, // LAC 23–20
   ];
 
   // Confidence rank: highest winPct = rank 14
@@ -892,7 +892,7 @@ function switchTab(panel, btn) {
 
   // Season log
   const logTbody=document.getElementById('log-tbody');
-  [{week:'Week 10',record:'—/14',acc:'—',notes:'In progress · results after Nov 16 MNF'}]
+  [{week:'Week 10',record:'7/14',acc:'50.0%',notes:'Final · WAS upset NYG; CLE upset HOU; MIN beat GB; CAR upset NO; CIN beat PIT; LAC upset BAL'}]
     .forEach(row=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`<td style="font-weight:700;color:#c17b4e">${row.week}</td><td style="font-weight:700">${row.record}</td><td>${row.acc}</td><td style="color:#9a8f85;font-size:0.82rem">${row.notes}</td>`;
